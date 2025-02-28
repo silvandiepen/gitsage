@@ -1,10 +1,10 @@
 import { analyzeAndCommit } from '../gitsage';
-import { getUnstagedFiles, getUntrackedFiles, getStagedFiles, stageFiles, createCommit, promptFileSelection } from '../../modules/git/operations';
-import { processGitDiff } from '../../modules/ai/operations';
+import { getUnstagedFiles, getUntrackedFiles, getStagedFiles, stageFiles, createCommit, promptFileSelection } from '../../modules/git/commit';
+import { processGitDiff } from '../../modules/ai/openai';
 import inquirer from 'inquirer';
 
-jest.mock('../../modules/git/operations');
-jest.mock('../../modules/ai/operations');
+jest.mock('../../modules/git/commit');
+jest.mock('../../modules/ai/openai');
 jest.mock('inquirer');
 
 describe('GitSage Controller', () => {
@@ -44,8 +44,8 @@ describe('GitSage Controller', () => {
 
             expect(processGitDiff).toHaveBeenCalledWith(mockDiff);
             expect(createCommit).toHaveBeenCalledTimes(2);
-            expect(createCommit).toHaveBeenCalledWith('feat', 'new feature');
-            expect(createCommit).toHaveBeenCalledWith('fix', 'bug fix');
+            expect(createCommit).toHaveBeenCalledWith('feat' as const, 'new feature');
+            expect(createCommit).toHaveBeenCalledWith('fix' as const, 'bug fix');
         });
 
         it('should handle unstaged files selection and staging', async () => {
@@ -68,7 +68,7 @@ describe('GitSage Controller', () => {
 
             expect(stageFiles).toHaveBeenCalledWith(['file1.ts']);
             expect(processGitDiff).toHaveBeenCalledWith('updated diff');
-            expect(createCommit).toHaveBeenCalledWith('feat', 'new feature');
+            expect(createCommit).toHaveBeenCalledWith('feat' as const, 'new feature');
         });
 
         it('should abort when user declines commit confirmation', async () => {

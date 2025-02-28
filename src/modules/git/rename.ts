@@ -1,0 +1,146 @@
+import { execSync } from "child_process";
+import inquirer from "inquirer";
+import * as log from "cli-block";
+import { stripAnsiCodes } from "./utils";
+import { COMMIT_TYPES } from "./types";
+
+/**
+ * Gets the commit message for a specific commit hash
+ * @param {string} commitHash - The hash of the commit
+ * @returns {string} The commit message
+ */
+export function getCommitMessage(commitHash: string): string {
+    try {
+        return execSync(`git log -n 1 --format=%B ${commitHash}`, { encoding: "utf-8" }).trim();
+    } catch (error) {
+        throw new Error(`Failed to get commit message: ${error}`);
+    }
+}
+
+/**
+ * Gets the most recent commit hash
+ * @returns {string} The hash of the most recent commit
+ */
+export function getHeadCommit(): string {
+    try {
+        return execSync('git rev-parse HEAD', { encoding: "utf-8" }).trim();
+    } catch (error) {
+        throw new Error(`Failed to get HEAD commit: ${error}`);
+    }
+}
+
+/**
+ * Prompts user to select a commit from the git log
+ * @returns {Promise<string>} The selected commit hash
+ */
+async function selectCommit(): Promise<string> {
+    try {
+        const gitLog = execSync('git log --oneline --decorate --color=always', { encoding: "utf-8" });
+        const { commit } = await inquirer.prompt([{
+            type: 'list',
+            name: 'commit',
+            message: 'Select a commit to rename:',
+            choices: gitLog.split('\n').map(line => ({
+                name: line,
+                value: line.split(' ')[0]
+            })),
+            pageSize: 10
+        }]);
+        return commit;
+    } catch (error) {
+        throw new Error(`Failed to get git log: ${error}`);
+    }
+}
+
+/**
+ * Renames a commit message
+ * @param {string} commitHash - Optional commit hash to rename
+ */
+export async function renameCommit(commitHash?: string): Promise<void> {
+    try {
+        // Get commit hash either from parameter or user selection
+        const displayCommit = commitHash || await selectCommit();
+        const cleanCommit = stripAnsiCodes(displayCommit);
+
+        if (!cleanCommit) {
+            log.blockLineError('No commit selected.');
+            return;
+        }
+
+        // Get current commit message
+        const currentMessage = getCommitMessage(cleanCommit);
+
+        // Display current commit message
+        log.start('Commit Message Rename');
+        log.blockHeader('Current Commit Message');
+        log.blockLine(currentMessage);
+
+        // Select commit type
+        const { commitType } = await inquirer.prompt([{
+            type: 'list',
+            name: 'commitType',
+            message: 'Select commit type:',
+            choices: COMMIT_TYPES,
+            pageSize: COMMIT_TYPES.length
+        }]);
+
+        // Get new commit message
+        const { messageContent } = await inquirer.prompt([{
+            type: 'input',
+            name: 'messageContent',
+            message: 'Enter commit message:',
+            validate: (input: string) => input.trim().length > 0 || 'Commit message cannot be empty'
+        }]);
+
+        // Construct the full commit message
+        const newMessage = commitType ? `${commitType}: ${messageContent}` : messageContent;
+
+        // Show summary and get confirmation
+        log.blockMid('Rename Summary');
+        log.blockRowLine(['Commit Hash', displayCommit]); // Use colored hash for display
+        log.blockRowLine(['Old Message', currentMessage]);
+        log.blockRowLine(['New Message', newMessage]);
+
+        const { confirmed } = await inquirer.prompt([{
+            type: 'confirm',
+            name: 'confirmed',
+            message: 'Are you sure you want to proceed?',
+            default: true
+        }]);
+
+        if (!confirmed) {
+            log.blockLineWarning('Operation cancelled.');
+            log.blockFooter();
+            return;
+        }
+
+        // Check if it's the most recent commit
+        const headCommit = getHeadCommit();
+        if (cleanCommit === headCommit) {
+            // For the most recent commit, use git commit --amend
+            log.blockMid('Renaming Commit');
+            log.blockLine('Renaming the most recent commit...');
+            execSync(`git commit --amend -m "${newMessage}"`, { encoding: "utf-8" });
+            log.blockLineSuccess('Most recent commit renamed successfully!');
+        } else {
+            // For older commits, use interactive rebase
+            log.blockMid('Renaming Commit');
+            log.blockLine('Renaming an older commit. Starting interactive rebase...');
+
+            // Start the interactive rebase with clean commit hash
+            execSync(`git rebase -i ${cleanCommit}^ --exec 'if [ "$(git rev-parse HEAD)" = "${cleanCommit}" ]; then git commit --amend -m "${newMessage}" --no-edit; fi'`, { encoding: "utf-8" });
+
+            log.blockLineSuccess('Commit renamed successfully!');
+        }
+
+        // Show updated git log
+        log.blockMid('Updated Git Log');
+        log.blockLine(execSync('git log -n 3 --oneline --decorate --color=always', { encoding: "utf-8" }));
+        log.blockFooter();
+
+    } catch (error) {
+        log.blockLineError(`Error: ${error}`);
+        log.blockFooter();
+        throw error;
+    }
+}

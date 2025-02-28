@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { getApiKey } from "../../config";
 import * as log from "cli-block";
+import { CommitType } from "../git/types";
 
 /**
  * Initializes and returns an OpenAI API instance with the configured API key
@@ -40,10 +41,10 @@ export function splitDiffIntoChunks(diff: string, maxChunkSize: number): string[
 /**
  * Processes Git diff using OpenAI to generate structured commit messages
  * @param {string} diff - The Git diff to analyze
- * @returns {Promise<Array<{type: string, message: string, hunks: string[]}>>} Array of commit suggestions
+ * @returns {Promise<Array<{type: CommitType, message: string, hunks: string[]}>>} Array of commit suggestions
  * @throws {Error} When OpenAI API call fails
  */
-export async function processGitDiff(diff: string): Promise<Array<{ type: string; message: string; hunks: string[] }>> {
+export async function processGitDiff(diff: string): Promise<Array<{ type: CommitType; message: string; hunks: string[] }>> {
     const openai = await getOpenAIInstance();
     const MAX_CHUNK_LENGTH = 4000;
     const diffChunks = splitDiffIntoChunks(diff, MAX_CHUNK_LENGTH);

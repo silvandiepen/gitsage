@@ -1,5 +1,6 @@
-import { getUnstagedFiles, getUntrackedFiles, getStagedFiles, stageFiles, createCommit, promptFileSelection } from "../modules/git/operations";
-import { processGitDiff } from "../modules/ai/operations";
+import { getUnstagedFiles, getUntrackedFiles, getStagedFiles, stageFiles, createCommit, promptFileSelection } from "../modules/git/commit";
+import { CommitType } from "../modules/git/types";
+import { processGitDiff } from "../modules/ai/openai";
 import inquirer from "inquirer";
 
 /**
@@ -121,7 +122,7 @@ export async function analyzeAndCommit() {
     // Generate summary for user confirmation
     console.log("\n🔹 AI-generated commit summary:");
     commitGroups.forEach(({ type, message }, index) => {
-        console.log(`\n[${index + 1}] ${type.toUpperCase()}: ${message}`);
+        console.log(`\n[${index + 1}] ${(type as string).toUpperCase()}: ${message}`);
     });
 
     // Ask user for confirmation before committing

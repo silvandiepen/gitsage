@@ -1,5 +1,6 @@
 import { execSync } from "child_process";
 import inquirer from "inquirer";
+import { CommitType } from './types';
 
 /**
  * Executes a shell command and returns its output
@@ -73,7 +74,7 @@ export function stageFiles(files: string[]): void {
  * @param {string} type - The type of commit (feat, fix, etc.)
  * @param {string} message - The commit message
  */
-export function createCommit(type: string, message: string): void {
+export function createCommit(type: CommitType, message: string): void {
     runCommand(`git commit -m "${type}: ${message}"`);
 }
 

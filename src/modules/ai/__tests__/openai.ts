@@ -1,4 +1,4 @@
-import { splitDiffIntoChunks, getOpenAIInstance, processGitDiff } from '../operations';
+import { splitDiffIntoChunks, getOpenAIInstance, processGitDiff } from '../openai';
 import OpenAI from 'openai';
 import { getApiKey } from '../../../config';
 
