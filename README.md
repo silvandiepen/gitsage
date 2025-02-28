@@ -14,6 +14,7 @@ An intelligent Git commit message generator powered by OpenAI's GPT-4. This tool
 - 🔍 Smart change analysis and grouping
 - ✨ Interactive commit message selection
 - 🛠️ Easy configuration and setup
+- 🔄 Interactive fixup for commit amendments
 
 ## Quick Start
 
@@ -53,6 +54,24 @@ gitsage
 3. Review and confirm the generated commit messages
 
 Note: If no changes are staged, gitsage will automatically help you select which files to stage through an interactive interface. This makes the staging process optional and more user-friendly.
+
+### Using Fixup
+
+The fixup command allows you to amend changes to a previous commit:
+
+```bash
+gitsage fixup
+```
+
+This will:
+1. Show your current changes
+2. Let you select a commit to fixup into
+3. Create a fixup commit and automatically rebase
+
+It's useful when you want to:
+- Add forgotten changes to a previous commit
+- Fix bugs in earlier commits
+- Keep your commit history clean and organized
 
 ## How It Works
 
