@@ -1,6 +1,6 @@
 <picture>
-  <source srcset="https://github.com/user-attachments/assets/f1e1a836-49d3-4b89-a3f7-1bceb3f58816" media="(prefers-color-scheme: dark)">
-  <img src="[logo-light.png](https://github.com/user-attachments/assets/db0748cf-a009-4123-b1ce-d075aacbfff2)" alt="Logo" width="200">
+  <source srcset="https://github.com/user-attachments/assets/fbf3f128-e0e6-4ff6-b05c-315521b89749" media="(prefers-color-scheme: dark)">
+  <img src="https://github.com/user-attachments/assets/90aa081c-4cce-41fa-9c9b-03bd908a8b20" alt="Logo" width="200">
 </picture>
 
 # GitSage
