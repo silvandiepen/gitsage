@@ -81,7 +81,7 @@ Requirements:
 
 ### Using Fixup
 
-The fixup command allows you to amend changes to a previous commit:
+The fixup command helps you amend changes to a previous commit:
 
 ```bash
 gitsage fixup
@@ -89,13 +89,48 @@ gitsage fixup
 
 This will:
 1. Show your current changes
-2. Let you select a commit to fixup into
-3. Create a fixup commit and automatically rebase
+2. Display a list of recent commits
+3. Let you select a commit to fixup into
+4. Create a fixup commit and automatically rebase
 
 It's useful when you want to:
 - Add forgotten changes to a previous commit
 - Fix bugs in earlier commits
 - Keep your commit history clean and organized
+
+### Using Commit
+
+To generate an AI-powered commit message for your changes:
+
+```bash
+gitsage commit
+```
+
+This will:
+1. Analyze your staged changes (or help you stage them)
+2. Generate meaningful commit messages based on the changes
+3. Group related changes together
+4. Let you select or modify the generated message
+5. Create a conventional commit with the selected message
+
+### Using Rename
+
+To rename files with AI assistance:
+
+```bash
+gitsage rename
+```
+
+This will:
+1. Analyze your selected files
+2. Suggest meaningful names based on file content and context
+3. Let you review and confirm the suggested names
+4. Handle the file renaming and related git operations
+
+Useful for:
+- Organizing project files
+- Making file names more descriptive
+- Maintaining consistent naming conventions
 
 ## How It Works
 
