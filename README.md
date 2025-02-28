@@ -56,6 +56,29 @@ gitsage
 
 Note: If no changes are staged, gitsage will automatically help you select which files to stage through an interactive interface. This makes the staging process optional and more user-friendly.
 
+### Using Pull Request Generation
+
+To generate a pull request with AI-powered content:
+
+```bash
+gitsage pr
+```
+
+This will:
+1. Detect your Git platform (GitHub/Bitbucket)
+2. Analyze the changes between your current branch and target branch
+3. Generate a well-structured PR description including:
+   - Title and description
+   - Problem statement
+   - Solution overview
+   - List of changes
+   - Testing details
+4. Create the PR using the platform's CLI tool (gh/bb)
+
+Requirements:
+- GitHub CLI (gh) for GitHub repositories
+- Bitbucket CLI (bb) for Bitbucket repositories
+
 ### Using Fixup
 
 The fixup command allows you to amend changes to a previous commit:
