@@ -3,6 +3,7 @@
 import { Command } from "commander";
 import { analyzeAndCommit } from "./controllers/gitsage";
 import { renameCommit } from "./modules/git/rename";
+import { fixup } from "./modules/git/fixup";
 
 const program = new Command();
 
@@ -24,6 +25,13 @@ program
   .argument("[hash]", "Optional commit hash to rename")
   .action((hash) => {
     renameCommit(hash);
+  });
+
+program
+  .command("fixup")
+  .description("Add changes to a previous commit")
+  .action(() => {
+    fixup();
   });
 
 program.parse(process.argv);
