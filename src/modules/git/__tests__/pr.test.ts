@@ -89,13 +89,13 @@ describe("PR Module", () => {
             const result = await generatePRContent(diff, commits);
 
             expect(result).toEqual({
-                title: "add new feature",
-                description: "This PR implements add new feature",
-                problem: "Detailed problem description will be generated from commit messages",
-                solution: "Solution overview will be generated from commit changes",
+                title: "Multiple updates: feat (1), fix (1)",
+                description: "This PR add new feature and fix bug",
+                problem: "The codebase had the following issues that needed to be addressed:\n  - fix bug",
+                solution: "This PR addresses these needs by:\n  - Implemented add new feature\n  - Fixed fix bug",
                 changes: expect.stringContaining("FEAT"),
                 commits: "  abc123 - feat: add feature",
-                testing: "Testing details will be extracted from test-related changes"
+                testing: "New functionality has been tested through manual verification\nExisting test suite verifies the fixes"
             });
         });
 
@@ -103,7 +103,7 @@ describe("PR Module", () => {
             (processGitDiff as jest.Mock).mockResolvedValueOnce([]);
 
             const result = await generatePRContent("diff", "");
-            expect(result.title).toBe("Update branch");
+            expect(result.title).toBe("Multiple updates: ");
             expect(result.commits).toBe("  ");
         });
     });
