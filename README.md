@@ -35,7 +35,7 @@ Before using gitmind, you'll need to configure your OpenAI API key. The tool wil
 
 ## Usage
 
-1. Stage your changes using git add:
+1. (Optional) Stage your changes using git add:
 ```bash
 git add <files>
 ```
@@ -47,7 +47,7 @@ gitmind
 
 3. Review and confirm the generated commit messages
 
-If no changes are staged, the tool will help you select files to stage before generating commit messages.
+Note: If no changes are staged, gitmind will automatically help you select which files to stage through an interactive interface. This makes the staging process optional and more user-friendly.
 
 ## How It Works
 

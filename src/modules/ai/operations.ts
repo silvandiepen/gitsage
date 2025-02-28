@@ -1,7 +1,6 @@
 import OpenAI from "openai";
 import { getApiKey } from "../../config";
 import * as log from "cli-block";
-import { LoaderOptions } from "cli-block/dist/lib/types";
 
 /**
  * Initializes and returns an OpenAI API instance with the configured API key
