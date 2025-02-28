@@ -183,8 +183,8 @@ describe('Git Rename Operations', () => {
 
       await renameCommit();
 
-      expect(execSync).toHaveBeenCalledWith(
-        `git rebase -i ${mockHash}^ --exec 'if [ "$(git rev-parse HEAD)" = "${mockHash}" ]; then git commit --amend -m "${newMessage}" --no-edit; fi'`,
+      expect(execSync).toHaveBeenNthCalledWith(6,
+        `git filter-branch -f --msg-filter 'if [ \"$GIT_COMMIT\" = \"abc123\" ]; then echo \"feat: new feature\"; else cat; fi' abc123^..HEAD`,
         { encoding: 'utf-8' }
       );
     });

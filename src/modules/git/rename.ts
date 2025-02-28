@@ -3,6 +3,7 @@ import inquirer from "inquirer";
 import * as log from "cli-block";
 import { stripAnsiCodes } from "./utils";
 import { COMMIT_TYPES } from "./types";
+import * as fs from "fs";
 
 /**
  * Gets the commit message for a specific commit hash
@@ -141,13 +142,10 @@ export async function renameCommit(commitHash?: string): Promise<void> {
             execSync(`git commit --amend -m "${newMessage}"`, { encoding: "utf-8" });
             log.blockLineSuccess('Most recent commit renamed successfully!');
         } else {
-            // For older commits, use interactive rebase
+            // For older commits, use filter-branch
             log.blockMid('Renaming Commit');
-            log.blockLine('Renaming an older commit. Starting interactive rebase...');
-
-            // Start the interactive rebase with clean commit hash
-            execSync(`git rebase -i ${cleanCommit}^ --exec 'if [ "$(git rev-parse HEAD)" = "${cleanCommit}" ]; then git commit --amend -m "${newMessage}" --no-edit; fi'`, { encoding: "utf-8" });
-
+            log.blockLine('Renaming an older commit...');
+            execSync(`git filter-branch -f --msg-filter 'if [ "$GIT_COMMIT" = "${cleanCommit}" ]; then echo "${newMessage}"; else cat; fi' ${cleanCommit}^..HEAD`, { encoding: "utf-8" });
             log.blockLineSuccess('Commit renamed successfully!');
         }
 
