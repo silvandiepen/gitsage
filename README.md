@@ -15,6 +15,7 @@ An intelligent Git commit message generator powered by OpenAI's GPT-4. This tool
 - ✨ Interactive commit message selection
 - 🛠️ Easy configuration and setup
 - 🔄 Interactive fixup for commit amendments
+- 📋 AI-powered PR content generation
 
 ## Quick Start
 
