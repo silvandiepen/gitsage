@@ -74,12 +74,19 @@ export async function generatePRContent(diff: string, commits: string): Promise<
         return acc;
     }, {});
 
-    // Format changes overview
+    // Format changes overview with better spacing
     const changesOverview = Object.entries(changesByType)
         .map(([type, messages]) => {
-            return `### ${type.toUpperCase()}\n${messages.map((msg: string) => `- ${msg}`).join("\n")}`;
+            const formattedMessages = messages.map((msg: string) => `  - ${msg}`).join("\n");
+            return `${type.toUpperCase()}:\n${formattedMessages}`;
         })
         .join("\n\n");
+
+    // Format commits with better spacing
+    const formattedCommits = commits
+        .split("\n")
+        .map(commit => `  ${commit}`)
+        .join("\n");
 
     return {
         title,
@@ -87,7 +94,7 @@ export async function generatePRContent(diff: string, commits: string): Promise<
         problem: "Detailed problem description will be generated from commit messages",
         solution: "Solution overview will be generated from commit changes",
         changes: changesOverview,
-        commits: commits || "No commits found",
+        commits: formattedCommits || "No commits found",
         testing: "Testing details will be extracted from test-related changes"
     };
 }
@@ -119,6 +126,28 @@ export async function generatePR(): Promise<void> {
         log.blockLine(prContent.testing);
 
         log.blockFooter();
+
+        // Ask user if they want to create the PR
+        const { createPR } = await inquirer.prompt([
+            {
+                type: "confirm",
+                name: "createPR",
+                message: "Would you like to create this PR on GitHub?",
+                default: true
+            }
+        ]);
+
+        if (createPR) {
+            const currentBranch = execSync("git branch --show-current").toString().trim();
+            // Create PR using GitHub CLI
+            try {
+                const prCommand = `gh pr create --base ${targetBranch} --head ${currentBranch} --title "${prContent.title}" --body "${prContent.description}\n\n## Problem\n${prContent.problem}\n\n## Solution\n${prContent.solution}\n\n## Changes\n${prContent.changes}\n\n## Testing\n${prContent.testing}"`;
+                execSync(prCommand);
+                log.blockLineSuccess("✨ Pull request created successfully!");
+            } catch (error) {
+                log.blockLineError(`Failed to create PR: ${error}\nMake sure you have GitHub CLI (gh) installed and authenticated.`);
+            }
+        }
 
     } catch (error) {
         log.blockLineError("Error generating PR content: " + error);

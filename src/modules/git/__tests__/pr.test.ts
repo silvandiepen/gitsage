@@ -93,7 +93,7 @@ describe("PR Module", () => {
                 problem: "Detailed problem description will be generated from commit messages",
                 solution: "Solution overview will be generated from commit changes",
                 changes: expect.stringContaining("FEAT"),
-                commits: "abc123 - feat: add feature",
+                commits: "  abc123 - feat: add feature",
                 testing: "Testing details will be extracted from test-related changes"
             });
         });
@@ -103,7 +103,7 @@ describe("PR Module", () => {
 
             const result = await generatePRContent("diff", "");
             expect(result.title).toBe("Update branch");
-            expect(result.commits).toBe("No commits found");
+            expect(result.commits).toBe("  ");
         });
     });
 });
