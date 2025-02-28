@@ -1,3 +1,5 @@
+![image](https://github.com/user-attachments/assets/db0748cf-a009-4123-b1ce-d075aacbfff2)
+
 # GitMind
 
 An intelligent Git commit message generator powered by OpenAI's GPT-4. This tool analyzes your staged changes and automatically generates meaningful, conventional commit messages.
