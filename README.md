@@ -1,4 +1,7 @@
-![image](https://github.com/user-attachments/assets/db0748cf-a009-4123-b1ce-d075aacbfff2)
+<picture>
+  <source srcset="https://github.com/user-attachments/assets/f1e1a836-49d3-4b89-a3f7-1bceb3f58816" media="(prefers-color-scheme: dark)">
+  <img src="[logo-light.png](https://github.com/user-attachments/assets/db0748cf-a009-4123-b1ce-d075aacbfff2)" alt="Logo" width="200">
+</picture>
 
 # GitMind
 
