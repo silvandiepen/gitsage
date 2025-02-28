@@ -3,7 +3,7 @@
   <img src="[logo-light.png](https://github.com/user-attachments/assets/db0748cf-a009-4123-b1ce-d075aacbfff2)" alt="Logo" width="200">
 </picture>
 
-# GitMind
+# GitSage
 
 An intelligent Git commit message generator powered by OpenAI's GPT-4. This tool analyzes your staged changes and automatically generates meaningful, conventional commit messages.
 
@@ -17,10 +17,10 @@ An intelligent Git commit message generator powered by OpenAI's GPT-4. This tool
 
 ## Quick Start
 
-You can use gitmind directly without installation using npx:
+You can use gitsage directly without installation using npx:
 
 ```bash
-npx gitmind
+npx gitsage
 ```
 
 ### Optional Installation
@@ -28,12 +28,12 @@ npx gitmind
 If you prefer, you can install the package globally:
 
 ```bash
-npm install -g gitmind
+npm install -g gitsage
 ```
 
 ## Configuration
 
-Before using gitmind, you'll need to configure your OpenAI API key. The tool will prompt you for the key on first use, or you can set it up manually:
+Before using gitsage, you'll need to configure your OpenAI API key. The tool will prompt you for the key on first use, or you can set it up manually:
 
 1. Get your API key from [OpenAI's platform](https://platform.openai.com/)
 2. The tool will automatically store your API key securely for future use
@@ -45,14 +45,14 @@ Before using gitmind, you'll need to configure your OpenAI API key. The tool wil
 git add <files>
 ```
 
-2. Run gitmind:
+2. Run gitsage:
 ```bash
-gitmind
+gitsage
 ```
 
 3. Review and confirm the generated commit messages
 
-Note: If no changes are staged, gitmind will automatically help you select which files to stage through an interactive interface. This makes the staging process optional and more user-friendly.
+Note: If no changes are staged, gitsage will automatically help you select which files to stage through an interactive interface. This makes the staging process optional and more user-friendly.
 
 ## How It Works
 
@@ -82,7 +82,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes using the tool itself! (`gitmind`)
+3. Commit your changes using the tool itself! (`gitsage`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 

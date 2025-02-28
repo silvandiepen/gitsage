@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
-import { analyzeAndCommit } from "./controllers/gitmind";
+import { analyzeAndCommit } from "./controllers/gitsage";
 
 const program = new Command();
 
 program
-  .name("gitmind")
+  .name("gitsage")
   .description("AI-powered commit automation")
   .version("1.0.0");
 

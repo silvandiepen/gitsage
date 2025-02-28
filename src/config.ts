@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import inquirer from "inquirer"; // ✅ Correct import
 
-const CONFIG_DIR = path.join(process.env.HOME || process.env.USERPROFILE || ".", ".gitmind");
+const CONFIG_DIR = path.join(process.env.HOME || process.env.USERPROFILE || ".", ".gitsage");
 const CONFIG_FILE = path.join(CONFIG_DIR, "config.json");
 
 export async function getApiKey(): Promise<string> {

@@ -1,4 +1,4 @@
-import { analyzeAndCommit } from '../gitmind';
+import { analyzeAndCommit } from '../gitsage';
 import { getUnstagedFiles, getUntrackedFiles, getStagedFiles, stageFiles, createCommit, promptFileSelection } from '../../modules/git/operations';
 import { processGitDiff } from '../../modules/ai/operations';
 import inquirer from 'inquirer';
@@ -7,7 +7,7 @@ jest.mock('../../modules/git/operations');
 jest.mock('../../modules/ai/operations');
 jest.mock('inquirer');
 
-describe('GitMind Controller', () => {
+describe('GitSage Controller', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         console.log = jest.fn();

@@ -1,10 +1,10 @@
 {
-  "name": "gitmind",
+  "name": "gitsage",
   "version": "1.0.0",
   "description": "AI-powered Git commit automation tool",
   "main": "dist/index.js",
   "bin": {
-    "gitmind": "dist/index.js"
+    "gitsage": "dist/index.js"
   },
   "scripts": {
     "build": "tsc",
