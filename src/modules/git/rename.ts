@@ -35,7 +35,8 @@ export function getHeadCommit(): string {
  */
 async function selectCommit(): Promise<string> {
     try {
-        const gitLog = execSync('git log --oneline --decorate --color=always', { encoding: "utf-8" });
+        // Get git log without colors for processing
+        const gitLog = execSync('git log --oneline --decorate --no-color', { encoding: "utf-8" });
         const { commit } = await inquirer.prompt([{
             type: 'list',
             name: 'commit',
@@ -58,6 +59,23 @@ async function selectCommit(): Promise<string> {
  */
 export async function renameCommit(commitHash?: string): Promise<void> {
     try {
+        // Check for staged or unstaged changes
+        const stagedChanges = execSync('git diff --staged --name-only', { encoding: "utf-8" }).trim();
+        const unstagedChanges = execSync('git diff --name-only', { encoding: "utf-8" }).trim();
+
+        if (stagedChanges || unstagedChanges) {
+            log.start('Commit Message Rename');
+            log.blockHeader('Cannot Proceed');
+            log.blockLine('There are uncommitted changes in your working directory.');
+            log.blockLine('To rename a commit, your working directory must be clean.');
+            log.blockMid('Suggested Actions');
+            log.blockLine('1. Commit your changes');
+            log.blockLine('2. Stash your changes using: git stash');
+            log.blockLine('3. Discard your changes using: git reset --hard');
+            log.blockFooter();
+            return;
+        }
+
         // Get commit hash either from parameter or user selection
         const displayCommit = commitHash || await selectCommit();
         const cleanCommit = stripAnsiCodes(displayCommit);
