@@ -4,6 +4,7 @@ import { Command } from "commander";
 import { analyzeAndCommit } from "./controllers/gitsage";
 import { renameCommit } from "./modules/git/rename";
 import { fixup } from "./modules/git/fixup";
+import { generatePR } from "./modules/git/pr";
 
 const program = new Command();
 
@@ -32,6 +33,13 @@ program
   .description("Add changes to a previous commit")
   .action(() => {
     fixup();
+  });
+
+program
+  .command("pr")
+  .description("Generate pull request content using AI analysis")
+  .action(() => {
+    generatePR();
   });
 
 program.parse(process.argv);
