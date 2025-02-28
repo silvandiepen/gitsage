@@ -3,8 +3,16 @@ import inquirer from "inquirer";
 import * as log from "cli-block";
 
 /**
- * Checks if there are any changes in the working directory
- * @returns {boolean} True if there are changes, false otherwise
+ * Checks if there are any uncommitted changes in the working directory.
+ * This includes both staged and unstaged changes.
+ *
+ * @example
+ * if (hasChanges()) {
+ *   console.log('You have uncommitted changes');
+ * }
+ *
+ * @returns {boolean} True if there are any changes (staged or unstaged), false if working directory is clean
+ * @throws {Error} If unable to check git status
  */
 export function hasChanges(): boolean {
     try {
@@ -16,8 +24,15 @@ export function hasChanges(): boolean {
 }
 
 /**
- * Gets the current changes in the working directory
- * @returns {string} The git diff stat output
+ * Retrieves a formatted diff stat of current changes in the working directory.
+ * Shows which files have been modified and the number of lines added/removed.
+ *
+ * @example
+ * const changes = getCurrentChanges();
+ * console.log('Current modifications:', changes);
+ *
+ * @returns {string} Formatted git diff stat output showing modified files and line changes
+ * @throws {Error} If unable to get git diff information
  */
 export function getCurrentChanges(): string {
     try {
@@ -28,9 +43,19 @@ export function getCurrentChanges(): string {
 }
 
 /**
- * Gets the commit details for a specific commit hash
- * @param {string} commitHash - The hash of the commit
- * @returns {{ hash: string, message: string, date: string, author: string }} Commit details
+ * Retrieves detailed information about a specific commit.
+ *
+ * @example
+ * const details = getCommitDetails('abc123');
+ * console.log(`Commit by ${details.author} on ${details.date}`);
+ *
+ * @param {string} commitHash - The full or shortened hash of the target commit
+ * @returns {Object} Commit information
+ * @property {string} hash - The commit hash
+ * @property {string} message - The commit message
+ * @property {string} date - Relative date of the commit (e.g., "2 days ago")
+ * @property {string} author - Name of the commit author
+ * @throws {Error} If commit hash is invalid or commit details cannot be retrieved
  */
 export function getCommitDetails(commitHash: string): { hash: string; message: string; date: string; author: string } {
     try {
@@ -44,9 +69,21 @@ export function getCommitDetails(commitHash: string): { hash: string; message: s
 }
 
 /**
- * Performs the git fixup operation
- * @param {string} commitHash - The hash of the commit to fix up into
- * @returns {boolean} True if the fixup was successful, false otherwise
+ * Performs a git fixup operation by creating a fixup commit and automatically rebasing.
+ * This function will:
+ * 1. Stage all current changes
+ * 2. Create a fixup commit targeting the specified commit
+ * 3. Perform an interactive rebase to squash the fixup commit
+ *
+ * @example
+ * if (performFixup('abc123')) {
+ *   console.log('Fixup successful');
+ * } else {
+ *   console.log('Fixup failed, manual intervention may be needed');
+ * }
+ *
+ * @param {string} commitHash - Hash of the commit to fix up into
+ * @returns {boolean} True if fixup and rebase were successful, false if there were errors or conflicts
  */
 export function performFixup(commitHash: string): boolean {
     try {
@@ -66,8 +103,18 @@ export function performFixup(commitHash: string): boolean {
 }
 
 /**
- * Gets the current repository status
- * @returns {string} The current git status output
+ * Gets the current repository status in short format.
+ * Shows staged, unstaged, and untracked files with their status indicators.
+ *
+ * @example
+ * const status = getRepoStatus();
+ * console.log('Current repo status:', status);
+ * // Output example:
+ * // M  modified.ts   (staged)
+ * // ?? newfile.ts   (untracked)
+ *
+ * @returns {string} Short format git status output
+ * @throws {Error} If unable to get repository status
  */
 export function getRepoStatus(): string {
     try {
@@ -78,7 +125,18 @@ export function getRepoStatus(): string {
 }
 
 /**
- * Main function to handle the fixup process
+ * Main function that handles the interactive fixup workflow.
+ * Guides the user through the process of:
+ * 1. Checking for and reviewing current changes
+ * 2. Selecting a target commit
+ * 3. Reviewing commit details
+ * 4. Confirming and executing the fixup operation
+ *
+ * @example
+ * await fixup();
+ *
+ * @returns {Promise<void>} Resolves when fixup process is complete
+ * @throws {Error} If any git operations fail during the process
  */
 export async function fixup(): Promise<void> {
     try {
