@@ -1,7 +1,7 @@
 import OpenAI from "openai";
-import { getApiKey } from "../../config";
+import { getApiKey } from "../config/config";
 import * as log from "cli-block";
-import { CommitType } from "../git/types";
+import { CommitType } from "../../types/types";
 
 /**
  * Initializes and returns an OpenAI API instance with the configured API key

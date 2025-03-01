@@ -2,10 +2,10 @@
 
 import { Command } from "commander";
 import { analyzeAndCommit } from "./controllers/gitsage";
-import { renameCommit } from "./modules/git/rename";
-import { fixup } from "./modules/git/fixup";
-import { generatePR } from "./modules/git/pr";
-import { pushBranch } from "./modules/git/branch";
+import { renameCommit } from "./modules/rename";
+import { fixup } from "./modules/fixup";
+import { generatePR } from "./modules/pr";
+import { pushBranch } from "./modules/branch";
 import { branchCommand } from "./controllers/branch";
 
 const program = new Command();
