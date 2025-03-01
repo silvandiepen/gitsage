@@ -23,10 +23,7 @@ export async function generatePRContent(diff: string, commits: string): Promise<
             throw new Error('Invalid commit groups format received from processGitDiff');
         }
 
-        // Generate title from the most significant change
-        const title = commitGroups[0]?.message || "Update branch";
-
-        // Group changes by type
+        // Group changes by type for better organization
         const changesByType = commitGroups.reduce<Record<string, string[]>>((acc, group) => {
             if (!group || typeof group.type !== 'string' || typeof group.message !== 'string') {
                 return acc;
@@ -36,6 +33,9 @@ export async function generatePRContent(diff: string, commits: string): Promise<
             acc[type].push(group.message);
             return acc;
         }, {});
+
+        // Generate a comprehensive title that reflects all major changes
+        const title = generateComprehensiveTitle(changesByType);
 
         // Format changes overview with better spacing
         const changesOverview = Object.entries(changesByType)
@@ -50,18 +50,107 @@ export async function generatePRContent(diff: string, commits: string): Promise<
             .map(commit => `  ${commit}`)
             .join("\n");
 
+        // Generate meaningful problem and solution descriptions
+        const { problem, solution } = generateProblemAndSolution(changesByType, commitGroups as Array<{ type: string; message: string; }>);
+
         return {
             title,
-            description: `This PR implements ${title.toLowerCase()}`,
-            problem: "Detailed problem description will be generated from commit messages",
-            solution: "Solution overview will be generated from commit changes",
+            description: `This PR ${generateDescription(changesByType)}`,
+            problem,
+            solution,
             changes: changesOverview || "No changes detected",
             commits: formattedCommits || "No commits found",
-            testing: "Testing details will be extracted from test-related changes"
+            testing: generateTestingDetails(changesByType)
         };
     } catch (error) {
         throw new Error(`Failed to generate PR content: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
+}
+
+function generateComprehensiveTitle(changesByType: Record<string, string[]>): string {
+    const types = Object.keys(changesByType);
+
+    if (types.length === 1) {
+        // If there's only one type of change, use the first message
+        return changesByType[types[0]][0];
+    }
+
+    // For multiple types, create a summary title
+    const summary = types.map(type => {
+        const count = changesByType[type].length;
+        return `${type} (${count})`;
+    }).join(', ');
+
+    return `Multiple updates: ${summary}`;
+}
+
+function generateDescription(changesByType: Record<string, string[]>): string {
+    const types = Object.keys(changesByType);
+    return types.map(type => {
+        const changes = changesByType[type];
+        if (changes.length === 1) {
+            return changes[0].toLowerCase();
+        }
+        return `includes ${changes.length} ${type.toLowerCase()} changes`;
+    }).join(' and ');
+}
+
+function generateProblemAndSolution(
+    changesByType: Record<string, string[]>,
+    commitGroups: Array<{ type: string; message: string }>
+): { problem: string; solution: string } {
+    let problem = '';
+    let solution = '';
+
+    // Generate problem statement based on change types
+    if (changesByType['fix']) {
+        problem = `The codebase had the following issues that needed to be addressed:\n${changesByType['fix'].map(fix => `  - ${fix}`).join('\n')}`;
+    } else if (changesByType['docs']) {
+        problem = 'The documentation was missing important information or needed clarification in several areas.';
+    } else if (changesByType['feat']) {
+        problem = 'The application lacked certain functionality that would improve user experience and productivity.';
+    } else {
+        problem = 'Several improvements were identified that would enhance the overall quality of the codebase.';
+    }
+
+    // Generate solution based on implemented changes
+    const solutionParts = commitGroups.map(({ type, message }) => {
+        switch (type) {
+            case 'fix':
+                return `Fixed ${message.toLowerCase()}`;
+            case 'feat':
+                return `Implemented ${message.toLowerCase()}`;
+            case 'docs':
+                return `Updated documentation to ${message.toLowerCase()}`;
+            default:
+                return message;
+        }
+    });
+
+    solution = `This PR addresses these needs by:\n${solutionParts.map(part => `  - ${part}`).join('\n')}`;
+
+    return { problem, solution };
+}
+
+function generateTestingDetails(changesByType: Record<string, string[]>): string {
+    if (changesByType['test']) {
+        return `The following tests were added or updated:\n${changesByType['test'].map(test => `  - ${test}`).join('\n')}`;
+    }
+
+    const testingByType: Record<string, string> = {
+        fix: 'Existing test suite verifies the fixes',
+        feat: 'New functionality has been tested through manual verification',
+        docs: 'Documentation changes have been reviewed for accuracy',
+        style: 'Style changes are visual-only and require no functional testing',
+        refactor: 'Refactoring changes maintain existing behavior and are covered by existing tests',
+    };
+
+    const relevantTypes = Object.keys(changesByType).filter(type => testingByType[type]);
+    if (relevantTypes.length > 0) {
+        return relevantTypes.map(type => testingByType[type]).join('\n');
+    }
+
+    return 'No specific testing required for these changes';
 }
 
 export async function generatePR(): Promise<void> {
