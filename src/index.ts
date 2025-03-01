@@ -5,6 +5,8 @@ import { analyzeAndCommit } from "./controllers/gitsage";
 import { renameCommit } from "./modules/git/rename";
 import { fixup } from "./modules/git/fixup";
 import { generatePR } from "./modules/git/pr";
+import { pushBranch } from "./modules/git/branch";
+import { branchCommand } from "./controllers/branch";
 
 const program = new Command();
 
@@ -40,6 +42,20 @@ program
   .description("Generate pull request content using AI analysis")
   .action(() => {
     generatePR();
+  });
+
+program
+  .command("branch")
+  .description("Interactive branch management")
+  .action(() => {
+    branchCommand();
+  });
+
+program
+  .command("push")
+  .description("Push current branch to remote with upstream and force push handling")
+  .action(() => {
+    pushBranch();
   });
 
 program.parse(process.argv);
