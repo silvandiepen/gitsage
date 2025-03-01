@@ -16,6 +16,8 @@ An intelligent Git commit message generator powered by OpenAI's GPT-4. This tool
 - 🛠️ Easy configuration and setup
 - 🔄 Interactive fixup for commit amendments
 - 📋 AI-powered PR content generation
+- 🌿 Smart branch management
+- 🔄 Automated push handling
 
 ## Quick Start
 
@@ -42,6 +44,8 @@ Before using gitsage, you'll need to configure your OpenAI API key. The tool wil
 
 ## Usage
 
+### Commit Management
+
 1. (Optional) Stage your changes using git add:
 ```bash
 git add <files>
@@ -49,12 +53,82 @@ git add <files>
 
 2. Run gitsage:
 ```bash
+gitsage commit
+```
+
+### Branch Management
+
+Create a new branch or switch to an existing one:
+```bash
+gitsage branch <branch-title> [-t <type>]
+```
+Example:
+```bash
+gitsage branch new-feature -t feature
+```
+
+Push your current branch to remote:
+```bash
+gitsage push
+```
+This command handles:
+- Setting up upstream tracking
+- Handling force push scenarios
+- Interactive confirmation for potentially destructive operations
+
+### Other Commands
+
+Rename a commit:
+```bash
+gitsage rename [commit-hash]
+```
+
+Add changes to a previous commit:
+```bash
+gitsage fixup
+```
+
+Generate PR content:
+```bash
+gitsage pr
+```
+
+```bash
 gitsage
 ```
 
 3. Review and confirm the generated commit messages
 
 Note: If no changes are staged, gitsage will automatically help you select which files to stage through an interactive interface. This makes the staging process optional and more user-friendly.
+
+### Using Branch Management
+
+To create or switch to a branch with proper type prefix:
+
+```bash
+gitsage checkout <branch-name>
+```
+
+If no type is provided in the branch name (e.g., feature/my-branch), you'll be prompted to select one from:
+- feature
+- fix
+- chore
+- docs
+- style
+- refactor
+- perf
+- test
+
+To push your current branch:
+
+```bash
+gitsage push
+```
+
+This will:
+1. Push your changes to remote
+2. Handle upstream branch creation if needed
+3. Prompt for force push if remote has diverged
 
 ### Using Pull Request Generation
 

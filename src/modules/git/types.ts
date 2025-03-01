@@ -16,6 +16,16 @@ export const COMMIT_TYPES = [
 ];
 
 /**
+ * Alternative names that map to standard commit types
+ */
+export const COMMIT_TYPE_ALIASES: Record<string, CommitType> = {
+    'feature': 'feat',      // Alternative for feat
+    'bugfix': 'fix',        // Alternative for fix
+    'documentation': 'docs', // Alternative for docs
+    'performance': 'perf',   // Alternative for perf
+};
+
+/**
  * Type representing valid commit types
  */
-export type CommitType =  typeof COMMIT_TYPES[keyof typeof COMMIT_TYPES];
+export type CommitType = typeof COMMIT_TYPES[number];
