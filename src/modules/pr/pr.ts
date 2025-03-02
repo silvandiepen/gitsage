@@ -1,6 +1,6 @@
 import { execSync } from "child_process";
 import inquirer from "inquirer";
-import { processGitDiff } from "../ai/openai";
+import { processGitDiff, getOpenAIInstance } from "../ai/openai";
 import { CommitType } from "../../types/types";
 import * as log from "cli-block";
 import { detectGitPlatform, checkCLI, getTargetBranch, getBranchDiff, getCommitHistory, GitPlatform } from "../../utils/git";
@@ -34,8 +34,29 @@ export async function generatePRContent(diff: string, commits: string): Promise<
             return acc;
         }, {});
 
-        // Generate a comprehensive title that reflects all major changes
-        const title = generateComprehensiveTitle(changesByType);
+        // Generate title using OpenAI based on the complete context
+        let title = '';
+        try {
+            const openai = await getOpenAIInstance();
+            const titleResponse = await openai.chat.completions.create({
+                model: "gpt-4",
+                messages: [
+                    {
+                        role: "system",
+                        content: "You are an expert at creating clear and meaningful PR titles. Generate a concise but descriptive title that captures the main purpose and impact of the changes. The title should be specific and actionable."
+                    },
+                    {
+                        role: "user",
+                        content: `Please create a PR title based on these changes:\n\nChanges by type:\n${JSON.stringify(changesByType, null, 2)}\n\nCommits:\n${commits}`
+                    }
+                ],
+                temperature: 0.2
+            });
+            title = titleResponse.choices[0]?.message?.content?.trim() || '';
+        } catch (error) {
+            // Fallback to conventional title generation if OpenAI fails
+            title = generateComprehensiveTitle(changesByType);
+        }
 
         // Format changes overview with better spacing
         const changesOverview = Object.entries(changesByType)
@@ -54,7 +75,7 @@ export async function generatePRContent(diff: string, commits: string): Promise<
         const { problem, solution } = generateProblemAndSolution(changesByType, commitGroups as Array<{ type: string; message: string; }>);
 
         return {
-            title,
+            title: title || generateComprehensiveTitle(changesByType),
             description: `This PR ${generateDescription(changesByType)}`,
             problem,
             solution,
@@ -67,69 +88,83 @@ export async function generatePRContent(diff: string, commits: string): Promise<
     }
 }
 
+// Fallback title generation when AI is unavailable
 function generateComprehensiveTitle(changesByType: Record<string, string[]>): string {
     const types = Object.keys(changesByType);
 
     if (types.length === 1) {
-        // If there's only one type of change, use the first message
-        return changesByType[types[0]][0];
+        const type = types[0];
+        const messages = changesByType[type];
+        // For single change, use the message directly
+        if (messages.length === 1) {
+            return `${type}: ${messages[0]}`;
+        }
+        // For multiple changes of same type, highlight key changes
+        const significantChanges = messages.slice(0, 2).join(' and ');
+        return `${type}: ${significantChanges}${messages.length > 2 ? ` (and ${messages.length - 2} more)` : ''}`;
     }
 
-    // For multiple types, create a summary title
-    const summary = types.map(type => {
-        const count = changesByType[type].length;
-        return `${type} (${count})`;
-    }).join(', ');
+    // For multiple types, create a meaningful summary focusing on major changes
+    const significantChanges = types.map(type => {
+        const messages = changesByType[type];
+        const mainMessage = messages[0];
+        return `${type}(${messages.length}): ${mainMessage}`;
+    }).join('; ');
 
-    return `Multiple updates: ${summary}`;
+    return significantChanges;
 }
 
 function generateDescription(changesByType: Record<string, string[]>): string {
     const types = Object.keys(changesByType);
-    return types.map(type => {
+    const mainChanges = types.map(type => {
         const changes = changesByType[type];
+        const mainMessage = changes[0];
         if (changes.length === 1) {
-            return changes[0].toLowerCase();
+            return mainMessage.toLowerCase();
         }
-        return `includes ${changes.length} ${type.toLowerCase()} changes`;
-    }).join(' and ');
+        const significantChanges = changes.slice(0, 2).map(msg => msg.toLowerCase()).join(' and ');
+        return `${significantChanges}${changes.length > 2 ? ` (and ${changes.length - 2} more ${type} changes)` : ''}`;
+    }).join(', with ');
+
+    return `implements ${mainChanges}`;
 }
 
 function generateProblemAndSolution(
     changesByType: Record<string, string[]>,
     commitGroups: Array<{ type: string; message: string }>
 ): { problem: string; solution: string } {
-    let problem = '';
-    let solution = '';
+    // Generate a detailed problem statement
+    const problems = Object.entries(changesByType)
+        .filter(([type]) => ['fix', 'perf', 'security'].includes(type))
+        .flatMap(([_, messages]) => messages)
+        .map(msg => `  - ${msg}`);
 
-    // Generate problem statement based on change types
-    if (changesByType['fix']) {
-        problem = `The codebase had the following issues that needed to be addressed:\n${changesByType['fix'].map(fix => `  - ${fix}`).join('\n')}`;
-    } else if (changesByType['docs']) {
-        problem = 'The documentation was missing important information or needed clarification in several areas.';
-    } else if (changesByType['feat']) {
-        problem = 'The application lacked certain functionality that would improve user experience and productivity.';
-    } else {
-        problem = 'Several improvements were identified that would enhance the overall quality of the codebase.';
-    }
-
-    // Generate solution based on implemented changes
-    const solutionParts = commitGroups.map(({ type, message }) => {
+    // Generate a comprehensive solution description
+    const solutions = commitGroups.map(({ type, message }) => {
         switch (type) {
-            case 'fix':
-                return `Fixed ${message.toLowerCase()}`;
             case 'feat':
                 return `Implemented ${message.toLowerCase()}`;
-            case 'docs':
-                return `Updated documentation to ${message.toLowerCase()}`;
+            case 'fix':
+                return `Fixed ${message.toLowerCase()}`;
+            case 'refactor':
+                return `Refactored ${message.toLowerCase()}`;
+            case 'perf':
+                return `Optimized ${message.toLowerCase()}`;
             default:
                 return message;
         }
     });
 
-    solution = `This PR addresses these needs by:\n${solutionParts.map(part => `  - ${part}`).join('\n')}`;
+    const problemStatement = problems.length > 0
+        ? `The codebase had the following issues that needed to be addressed:\n${problems.join('\n')}`
+        : `This PR introduces new features and improvements to enhance the codebase`;
 
-    return { problem, solution };
+    const solutionStatement = `This PR addresses these needs by:\n  - ${solutions.join('\n  - ')}`;
+
+    return {
+        problem: problemStatement,
+        solution: solutionStatement
+    };
 }
 
 function generateTestingDetails(changesByType: Record<string, string[]>): string {
@@ -222,7 +257,16 @@ export async function generatePR(): Promise<void> {
             try {
                 let prCommand = '';
                 if (platform === 'github') {
-                    prCommand = `gh pr create --base ${targetBranch} --head ${currentBranch} --title "${prContent.title}" --body "${prContent.description}\n\n## Problem\n${prContent.problem}\n\n## Solution\n${prContent.solution}\n\n## Changes\n${prContent.changes}\n\n## Testing\n${prContent.testing}"`;
+                    // Escape single quotes in content to prevent command injection
+                    let escapedTitle = prContent.title.replace(/'/g, "'\\''")
+
+                    //if the tiltle is fully in quotes, we remove the quotes around it
+                    if (escapedTitle.startsWith("'") && escapedTitle.endsWith("'")) {
+                        escapedTitle = escapedTitle.slice(1, -1);
+                    }
+
+                    const escapedBody = `${prContent.description}\n\n## Problem\n${prContent.problem}\n\n## Solution\n${prContent.solution}\n\n## Changes\n${prContent.changes}\n\n## Testing\n${prContent.testing}`.replace(/'/g, "'\\''")
+                    prCommand = `gh pr create --base '${targetBranch}' --head '${currentBranch}' --title '${escapedTitle}' --body '${escapedBody}'`;
                 } else if (platform === 'bitbucket') {
                     prCommand = `bb pr create --source ${currentBranch} --target ${targetBranch} --title "${prContent.title}" --description "${prContent.description}\n\n## Problem\n${prContent.problem}\n\n## Solution\n${prContent.solution}\n\n## Changes\n${prContent.changes}\n\n## Testing\n${prContent.testing}"`;
                 }

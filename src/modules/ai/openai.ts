@@ -46,7 +46,7 @@ export function splitDiffIntoChunks(diff: string, maxChunkSize: number): string[
  */
 export async function processGitDiff(diff: string): Promise<Array<{ type: CommitType; message: string; hunks: string[] }>> {
     const openai = await getOpenAIInstance();
-    const MAX_CHUNK_LENGTH = 4000;
+    const MAX_CHUNK_LENGTH = 10000;
     const diffChunks = splitDiffIntoChunks(diff, MAX_CHUNK_LENGTH);
 
     log.start("Git Commit Analysis");
@@ -57,15 +57,34 @@ export async function processGitDiff(diff: string): Promise<Array<{ type: Commit
         role: "system",
         content: `
             You are an expert in Git and software development.
-            I will send you the complete Git diff in multiple messages.
-            Do NOT respond yet—just acknowledge receipt.
-            Once I send 'END_OF_DIFF', analyze all received changes together
-            and generate meaningful commit messages, grouping related changes together.
+            Analyze the Git diff to generate concise, meaningful, and specific commit messages.
+            Focus on creating a clear narrative that explains:
 
-            IMPORTANT: Your response MUST be a valid JSON array containing objects with the following structure:
+            1. The specific technical changes made (e.g., "Implemented JWT authentication", not "Updated authentication")
+            2. The concrete business value or technical improvement (e.g., "Reduced API response time by 40%")
+            3. The scope of impact (e.g., "Refactored user authentication flow across all API endpoints")
+
+            Guidelines for generating commit messages:
+            - Be specific and quantitative where possible (e.g., "Reduced bundle size by 25%" vs "Optimized bundle size")
+            - Focus on the technical substance, not just the category of change
+            - Avoid generic terms like "multiple updates", "various changes", or "improvements"
+            - Include specific numbers, percentages, or metrics when relevant
+            - Mention specific technologies, patterns, or standards being implemented
+
+            For features:
+            - Name the specific feature or capability being added
+            - Mention the key technical components or patterns used
+            - Include any performance or scalability characteristics
+
+            For fixes:
+            - Name the specific bug or issue being fixed
+            - Mention the root cause if relevant
+            - Include any performance impact of the fix
+
+            Your response MUST be a valid JSON array containing objects with the following structure:
             [{
                 "type": "feat|fix|chore|docs|style|refactor|perf|test",
-                "message": "descriptive commit message",
+                "message": "descriptive commit message explaining the specific changes",
                 "hunks": ["patch content"]
             }]
             `
@@ -101,61 +120,26 @@ export async function processGitDiff(diff: string): Promise<Array<{ type: Commit
             return [];
         }
 
-        let commitGroups;
         try {
-            commitGroups = JSON.parse(aiResponse);
-        } catch (parseError: unknown) {
-            if (parseError instanceof Error) {
-                log.blockLine("⚠️ Failed to parse AI response as JSON: " + parseError.message);
-            } else {
-                log.blockLine("⚠️ Failed to parse AI response as JSON");
+            const parsedResponse = JSON.parse(aiResponse);
+            if (!Array.isArray(parsedResponse)) {
+                log.blockLine("⚠️ Response is not an array");
+                return [];
             }
+            return parsedResponse;
+        } catch (parseError) {
+            const errorMessage = parseError instanceof Error ? parseError.message : 'Invalid JSON response';
+            log.blockLine("⚠️ Failed to parse OpenAI response: " + errorMessage);
             return [];
         }
-
-        if (!Array.isArray(commitGroups)) {
-            log.blockLine("⚠️ Invalid response format: expected an array");
-            return [];
-        }
-
-        // Validate each commit group
-        const validCommitGroups = commitGroups.filter(group => {
-            if (!group || typeof group !== 'object') {
-                log.blockLine("⚠️ Invalid commit group format: expected an object");
-                return false;
-            }
-
-            const validTypes = ['feat', 'fix', 'chore', 'docs', 'style', 'refactor', 'perf', 'test'];
-            if (!group.type || !validTypes.includes(group.type)) {
-                log.blockLine(`⚠️ Invalid commit type: ${group.type}`);
-                return false;
-            }
-
-            if (!group.message || typeof group.message !== 'string') {
-                log.blockLine("⚠️ Invalid commit message format");
-                return false;
-            }
-
-            if (!Array.isArray(group.hunks)) {
-                log.blockLine("⚠️ Invalid hunks format: expected an array");
-                return false;
-            }
-
-            return true;
-        });
-
-        if (validCommitGroups.length > 0) {
-            log.blockMid("Generated Commit Messages");
-            validCommitGroups.forEach(group => {
-                log.blockRowLine([group.type, group.message]);
-            });
-        }
-
-        log.blockFooter();
-        return validCommitGroups;
     } catch (error) {
-        log.blockLine("⚠️ OpenAI API error: " + error);
-        log.blockFooter();
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        log.blockLine(`⚠️ OpenAI API call failed: ${errorMessage}`);
+        if (error instanceof OpenAI.APIError) {
+            log.blockLine(`Status: ${error.status}`);
+            log.blockLine(`Type: ${error.type}`);
+            if (error.code) log.blockLine(`Code: ${error.code}`);
+        }
         return [];
     }
 }
