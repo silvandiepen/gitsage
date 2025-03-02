@@ -57,34 +57,34 @@ export async function processGitDiff(diff: string): Promise<Array<{ type: Commit
         role: "system",
         content: `
             You are an expert in Git and software development.
-            Analyze the Git diff to generate detailed, meaningful commit messages that clearly explain:
-            1. What problem or need the changes address
-            2. How the changes solve the problem
-            3. The technical approach used
-            4. Any potential impact on the codebase
-            5. The scope and scale of the changes
-            6. Any dependencies or related components affected
+            Analyze the Git diff to generate concise, meaningful, and specific commit messages.
+            Focus on creating a clear narrative that explains:
 
-            Group related changes together and categorize them appropriately.
-            Be specific and descriptive in the commit messages.
-            Focus on the WHY and HOW, not just the WHAT.
-            Avoid generic descriptions like "multiple changes" - instead, provide specific counts and impacts.
+            1. The specific technical changes made (e.g., "Implemented JWT authentication", not "Updated authentication")
+            2. The concrete business value or technical improvement (e.g., "Reduced API response time by 40%")
+            3. The scope of impact (e.g., "Refactored user authentication flow across all API endpoints")
+
+            Guidelines for generating commit messages:
+            - Be specific and quantitative where possible (e.g., "Reduced bundle size by 25%" vs "Optimized bundle size")
+            - Focus on the technical substance, not just the category of change
+            - Avoid generic terms like "multiple updates", "various changes", or "improvements"
+            - Include specific numbers, percentages, or metrics when relevant
+            - Mention specific technologies, patterns, or standards being implemented
 
             For features:
-            - Explain what capability is being added and why it's valuable
-            - Describe the implementation approach and any design patterns used
-            - Note any configuration or setup requirements
+            - Name the specific feature or capability being added
+            - Mention the key technical components or patterns used
+            - Include any performance or scalability characteristics
 
             For fixes:
-            - Clearly state the bug or issue being fixed
-            - Explain the root cause of the problem
-            - Detail how the fix addresses the root cause
-            - Mention any preventive measures added
+            - Name the specific bug or issue being fixed
+            - Mention the root cause if relevant
+            - Include any performance impact of the fix
 
             Your response MUST be a valid JSON array containing objects with the following structure:
             [{
                 "type": "feat|fix|chore|docs|style|refactor|perf|test",
-                "message": "descriptive commit message explaining the problem and solution",
+                "message": "descriptive commit message explaining the specific changes",
                 "hunks": ["patch content"]
             }]
             `
@@ -128,11 +128,18 @@ export async function processGitDiff(diff: string): Promise<Array<{ type: Commit
             }
             return parsedResponse;
         } catch (parseError) {
-            log.blockLine("⚠️ Failed to parse OpenAI response");
+            const errorMessage = parseError instanceof Error ? parseError.message : 'Invalid JSON response';
+            log.blockLine("⚠️ Failed to parse OpenAI response: " + errorMessage);
             return [];
         }
     } catch (error) {
-        log.blockLine("⚠️ OpenAI API call failed");
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        log.blockLine(`⚠️ OpenAI API call failed: ${errorMessage}`);
+        if (error instanceof OpenAI.APIError) {
+            log.blockLine(`Status: ${error.status}`);
+            log.blockLine(`Type: ${error.type}`);
+            if (error.code) log.blockLine(`Code: ${error.code}`);
+        }
         return [];
     }
 }

@@ -89,8 +89,8 @@ describe("PR Module", () => {
             const result = await generatePRContent(diff, commits);
 
             expect(result).toEqual({
-                title: "Multiple updates: feat (1), fix (1)",
-                description: "This PR add new feature and fix bug",
+                title: "feat(1): add new feature; fix(1): fix bug",
+                description: "This PR implements add new feature, with fix bug",
                 problem: "The codebase had the following issues that needed to be addressed:\n  - fix bug",
                 solution: "This PR addresses these needs by:\n  - Implemented add new feature\n  - Fixed fix bug",
                 changes: expect.stringContaining("FEAT"),
@@ -103,7 +103,7 @@ describe("PR Module", () => {
             (processGitDiff as jest.Mock).mockResolvedValueOnce([]);
 
             const result = await generatePRContent("diff", "");
-            expect(result.title).toBe("Multiple updates: ");
+            expect(result.title).toBe("");
             expect(result.commits).toBe("  ");
         });
     });
