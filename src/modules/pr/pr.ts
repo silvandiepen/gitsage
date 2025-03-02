@@ -258,7 +258,13 @@ export async function generatePR(): Promise<void> {
                 let prCommand = '';
                 if (platform === 'github') {
                     // Escape single quotes in content to prevent command injection
-                    const escapedTitle = prContent.title.replace(/'/g, "'\\''")
+                    let escapedTitle = prContent.title.replace(/'/g, "'\\''")
+
+                    //if the tiltle is fully in quotes, we remove the quotes around it
+                    if (escapedTitle.startsWith("'") && escapedTitle.endsWith("'")) {
+                        escapedTitle = escapedTitle.slice(1, -1);
+                    }
+
                     const escapedBody = `${prContent.description}\n\n## Problem\n${prContent.problem}\n\n## Solution\n${prContent.solution}\n\n## Changes\n${prContent.changes}\n\n## Testing\n${prContent.testing}`.replace(/'/g, "'\\''")
                     prCommand = `gh pr create --base '${targetBranch}' --head '${currentBranch}' --title '${escapedTitle}' --body '${escapedBody}'`;
                 } else if (platform === 'bitbucket') {
