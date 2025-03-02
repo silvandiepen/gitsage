@@ -1,4 +1,4 @@
-import { COMMIT_TYPES } from './types';
+import { COMMIT_TYPES } from '../../types/types';
 
 /**
  * Extracts branch type and title from a branch name
@@ -20,4 +20,4 @@ export function parseBranchName(branchName: string): { type: string | null; titl
 }
 
 export { createBranch, checkoutBranch, getBranchInfo } from './branch-manager';
-export { pushBranch } from './push';
+export { pushBranch } from '../push/push';

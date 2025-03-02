@@ -1,6 +1,6 @@
 import { execSync } from "child_process";
 import inquirer from "inquirer";
-import { detectGitPlatform, checkCLI, getCurrentBranch, getBranchDiff, getCommitHistory, getTargetBranch } from "../utils/git";
+import { detectGitPlatform, checkCLI, getCurrentBranch, getBranchDiff, getCommitHistory, getTargetBranch } from "./git";
 
 jest.mock("child_process");
 jest.mock("inquirer");

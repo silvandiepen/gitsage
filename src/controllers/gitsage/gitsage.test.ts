@@ -1,9 +1,9 @@
-import { analyzeAndCommit } from '../gitsage';
-import { getUnstagedFiles, getUntrackedFiles, getStagedFiles, stageFiles, createCommit, promptFileSelection } from '../../modules/git/commit';
+import { analyzeAndCommit } from './gitsage';
+import { getUnstagedFiles, getUntrackedFiles, getStagedFiles, stageFiles, createCommit, promptFileSelection } from '../../modules/commit';
 import { processGitDiff } from '../../modules/ai/openai';
 import inquirer from 'inquirer';
 
-jest.mock('../../modules/git/commit');
+jest.mock('../../modules/commit');
 jest.mock('../../modules/ai/openai');
 jest.mock('inquirer');
 

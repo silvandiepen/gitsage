@@ -1,6 +1,6 @@
 import { execSync } from "child_process";
 import inquirer from "inquirer";
-import { CommitType } from './types';
+import { CommitType } from '../../types/types';
 
 /**
  * Executes a shell command and returns its output

@@ -1,4 +1,4 @@
-import { parseBranchName } from "../branch";
+import { parseBranchName } from "./branch";
 
 describe("Branch Module", () => {
     describe("parseBranchName", () => {

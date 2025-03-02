@@ -1,13 +1,13 @@
 import { execSync } from "child_process";
 import inquirer from "inquirer";
-import { generatePRContent, generatePR } from "../pr";
-import { detectGitPlatform, checkCLI, getTargetBranch, getBranchDiff, getCommitHistory } from "../utils/git";
-import { processGitDiff } from "../../ai/openai";
+import { generatePRContent, generatePR } from "./pr";
+import { detectGitPlatform, checkCLI, getTargetBranch, getBranchDiff, getCommitHistory } from "../../utils/git";
+import { processGitDiff } from "../ai/openai";
 
 jest.mock("child_process");
 jest.mock("inquirer");
-jest.mock("../../ai/openai");
-jest.mock("../utils/git", () => ({
+jest.mock("../ai/openai");
+jest.mock("../../utils/git", () => ({
     detectGitPlatform: jest.fn(),
     checkCLI: jest.fn(),
     getTargetBranch: jest.fn(),

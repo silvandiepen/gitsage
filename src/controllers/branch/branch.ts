@@ -1,5 +1,5 @@
 import inquirer from "inquirer";
-import { createBranch, checkoutBranch, getBranchInfo } from "../modules/git/branch";
+import { createBranch, checkoutBranch, getBranchInfo } from "../../modules/branch/branch";
 
 /**
  * Interactive branch management command

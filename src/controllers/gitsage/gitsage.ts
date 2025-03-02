@@ -1,6 +1,5 @@
-import { getUnstagedFiles, getUntrackedFiles, getStagedFiles, stageFiles, createCommit, promptFileSelection } from "../modules/git/commit";
-import { CommitType } from "../modules/git/types";
-import { processGitDiff } from "../modules/ai/openai";
+import { getUnstagedFiles, getUntrackedFiles, getStagedFiles, stageFiles, createCommit, promptFileSelection } from "../../modules/commit";
+import { processGitDiff } from "../../modules/ai";
 import inquirer from "inquirer";
 
 /**

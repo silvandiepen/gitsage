@@ -1,7 +1,7 @@
 import { execSync } from "child_process";
 import inquirer from "inquirer";
 import * as log from "cli-block";
-import { COMMIT_TYPES } from './types';
+import { COMMIT_TYPES } from '../../types/types';
 import { parseBranchName } from './branch';
 
 /**

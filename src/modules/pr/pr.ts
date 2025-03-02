@@ -1,9 +1,9 @@
 import { execSync } from "child_process";
 import inquirer from "inquirer";
 import { processGitDiff } from "../ai/openai";
-import { CommitType } from "./types";
+import { CommitType } from "../../types/types";
 import * as log from "cli-block";
-import { detectGitPlatform, checkCLI, getTargetBranch, getBranchDiff, getCommitHistory, GitPlatform } from "./utils/git";
+import { detectGitPlatform, checkCLI, getTargetBranch, getBranchDiff, getCommitHistory, GitPlatform } from "../../utils/git";
 
 interface PullRequestContent {
     title: string;

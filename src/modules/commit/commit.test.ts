@@ -1,4 +1,4 @@
-import { runCommand, getFileStatusEmoji, getUnstagedFiles, getUntrackedFiles, getStagedFiles, stageFiles, createCommit } from '../commit';
+import { runCommand, getFileStatusEmoji, getUnstagedFiles, getUntrackedFiles, getStagedFiles, stageFiles, createCommit } from './commit';
 import { execSync } from 'child_process';
 
 jest.mock('child_process');

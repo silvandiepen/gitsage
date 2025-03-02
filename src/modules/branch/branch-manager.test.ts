@@ -1,6 +1,6 @@
 import { execSync } from "child_process";
 import inquirer from "inquirer";
-import { checkoutBranch } from "../branch";
+import { checkoutBranch } from "./branch";
 
 jest.mock("child_process");
 jest.mock("inquirer");
