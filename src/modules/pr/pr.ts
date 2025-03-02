@@ -1,6 +1,6 @@
 import { execSync } from "child_process";
 import inquirer from "inquirer";
-import { processGitDiff } from "../ai/openai";
+import { processGitDiff, getOpenAIInstance } from "../ai/openai";
 import { CommitType } from "../../types/types";
 import * as log from "cli-block";
 import { detectGitPlatform, checkCLI, getTargetBranch, getBranchDiff, getCommitHistory, GitPlatform } from "../../utils/git";
@@ -34,8 +34,29 @@ export async function generatePRContent(diff: string, commits: string): Promise<
             return acc;
         }, {});
 
-        // Generate a comprehensive title that reflects all major changes
-        const title = generateComprehensiveTitle(changesByType);
+        // Generate title using OpenAI based on the complete context
+        let title = '';
+        try {
+            const openai = await getOpenAIInstance();
+            const titleResponse = await openai.chat.completions.create({
+                model: "gpt-4",
+                messages: [
+                    {
+                        role: "system",
+                        content: "You are an expert at creating clear and meaningful PR titles. Generate a concise but descriptive title that captures the main purpose and impact of the changes. The title should be specific and actionable."
+                    },
+                    {
+                        role: "user",
+                        content: `Please create a PR title based on these changes:\n\nChanges by type:\n${JSON.stringify(changesByType, null, 2)}\n\nCommits:\n${commits}`
+                    }
+                ],
+                temperature: 0.2
+            });
+            title = titleResponse.choices[0]?.message?.content?.trim() || '';
+        } catch (error) {
+            // Fallback to conventional title generation if OpenAI fails
+            title = generateComprehensiveTitle(changesByType);
+        }
 
         // Format changes overview with better spacing
         const changesOverview = Object.entries(changesByType)
@@ -54,7 +75,7 @@ export async function generatePRContent(diff: string, commits: string): Promise<
         const { problem, solution } = generateProblemAndSolution(changesByType, commitGroups as Array<{ type: string; message: string; }>);
 
         return {
-            title,
+            title: title || generateComprehensiveTitle(changesByType),
             description: `This PR ${generateDescription(changesByType)}`,
             problem,
             solution,
@@ -67,6 +88,7 @@ export async function generatePRContent(diff: string, commits: string): Promise<
     }
 }
 
+// Fallback title generation when AI is unavailable
 function generateComprehensiveTitle(changesByType: Record<string, string[]>): string {
     const types = Object.keys(changesByType);
 
