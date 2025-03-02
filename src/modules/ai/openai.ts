@@ -46,7 +46,7 @@ export function splitDiffIntoChunks(diff: string, maxChunkSize: number): string[
  */
 export async function processGitDiff(diff: string): Promise<Array<{ type: CommitType; message: string; hunks: string[] }>> {
     const openai = await getOpenAIInstance();
-    const MAX_CHUNK_LENGTH = 4000;
+    const MAX_CHUNK_LENGTH = 10000;
     const diffChunks = splitDiffIntoChunks(diff, MAX_CHUNK_LENGTH);
 
     log.start("Git Commit Analysis");
