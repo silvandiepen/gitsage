@@ -57,15 +57,34 @@ export async function processGitDiff(diff: string): Promise<Array<{ type: Commit
         role: "system",
         content: `
             You are an expert in Git and software development.
-            I will send you the complete Git diff in multiple messages.
-            Do NOT respond yet—just acknowledge receipt.
-            Once I send 'END_OF_DIFF', analyze all received changes together
-            and generate meaningful commit messages, grouping related changes together.
+            Analyze the Git diff to generate detailed, meaningful commit messages that clearly explain:
+            1. What problem or need the changes address
+            2. How the changes solve the problem
+            3. The technical approach used
+            4. Any potential impact on the codebase
+            5. The scope and scale of the changes
+            6. Any dependencies or related components affected
 
-            IMPORTANT: Your response MUST be a valid JSON array containing objects with the following structure:
+            Group related changes together and categorize them appropriately.
+            Be specific and descriptive in the commit messages.
+            Focus on the WHY and HOW, not just the WHAT.
+            Avoid generic descriptions like "multiple changes" - instead, provide specific counts and impacts.
+
+            For features:
+            - Explain what capability is being added and why it's valuable
+            - Describe the implementation approach and any design patterns used
+            - Note any configuration or setup requirements
+
+            For fixes:
+            - Clearly state the bug or issue being fixed
+            - Explain the root cause of the problem
+            - Detail how the fix addresses the root cause
+            - Mention any preventive measures added
+
+            Your response MUST be a valid JSON array containing objects with the following structure:
             [{
                 "type": "feat|fix|chore|docs|style|refactor|perf|test",
-                "message": "descriptive commit message",
+                "message": "descriptive commit message explaining the problem and solution",
                 "hunks": ["patch content"]
             }]
             `
@@ -101,61 +120,19 @@ export async function processGitDiff(diff: string): Promise<Array<{ type: Commit
             return [];
         }
 
-        let commitGroups;
         try {
-            commitGroups = JSON.parse(aiResponse);
-        } catch (parseError: unknown) {
-            if (parseError instanceof Error) {
-                log.blockLine("⚠️ Failed to parse AI response as JSON: " + parseError.message);
-            } else {
-                log.blockLine("⚠️ Failed to parse AI response as JSON");
+            const parsedResponse = JSON.parse(aiResponse);
+            if (!Array.isArray(parsedResponse)) {
+                log.blockLine("⚠️ Response is not an array");
+                return [];
             }
+            return parsedResponse;
+        } catch (parseError) {
+            log.blockLine("⚠️ Failed to parse OpenAI response");
             return [];
         }
-
-        if (!Array.isArray(commitGroups)) {
-            log.blockLine("⚠️ Invalid response format: expected an array");
-            return [];
-        }
-
-        // Validate each commit group
-        const validCommitGroups = commitGroups.filter(group => {
-            if (!group || typeof group !== 'object') {
-                log.blockLine("⚠️ Invalid commit group format: expected an object");
-                return false;
-            }
-
-            const validTypes = ['feat', 'fix', 'chore', 'docs', 'style', 'refactor', 'perf', 'test'];
-            if (!group.type || !validTypes.includes(group.type)) {
-                log.blockLine(`⚠️ Invalid commit type: ${group.type}`);
-                return false;
-            }
-
-            if (!group.message || typeof group.message !== 'string') {
-                log.blockLine("⚠️ Invalid commit message format");
-                return false;
-            }
-
-            if (!Array.isArray(group.hunks)) {
-                log.blockLine("⚠️ Invalid hunks format: expected an array");
-                return false;
-            }
-
-            return true;
-        });
-
-        if (validCommitGroups.length > 0) {
-            log.blockMid("Generated Commit Messages");
-            validCommitGroups.forEach(group => {
-                log.blockRowLine([group.type, group.message]);
-            });
-        }
-
-        log.blockFooter();
-        return validCommitGroups;
     } catch (error) {
-        log.blockLine("⚠️ OpenAI API error: " + error);
-        log.blockFooter();
+        log.blockLine("⚠️ OpenAI API call failed");
         return [];
     }
 }
