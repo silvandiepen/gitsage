@@ -120,6 +120,8 @@ export async function processGitDiff(diff: string): Promise<Array<{ type: Commit
             return [];
         }
 
+
+
         try {
             const parsedResponse = JSON.parse(aiResponse);
             if (!Array.isArray(parsedResponse)) {
@@ -130,6 +132,11 @@ export async function processGitDiff(diff: string): Promise<Array<{ type: Commit
         } catch (parseError) {
             const errorMessage = parseError instanceof Error ? parseError.message : 'Invalid JSON response';
             log.blockLine("⚠️ Failed to parse OpenAI response: " + errorMessage);
+
+            // Log the raw response before parsing
+            log.blockMid("Raw AI Response");
+            log.blockJson(aiResponse);
+
             return [];
         }
     } catch (error) {
