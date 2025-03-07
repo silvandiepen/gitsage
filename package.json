@@ -17,6 +17,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@sil/case": "^0.3.1",
     "cli-block": "^1.4.4",
     "commander": "^13.1.0",
     "dotenv": "^16.4.7",
