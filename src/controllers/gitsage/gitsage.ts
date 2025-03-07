@@ -1,4 +1,4 @@
-import { getUnstagedFiles, getUntrackedFiles, getStagedFiles, stageFiles, createCommit, promptFileSelection } from "../../modules/commit";
+import { getUnstagedFiles, getUntrackedFiles, getStagedFiles, stageFiles, createCommit, promptFileSelection, runCommand } from "../../modules/commit";
 import { processGitDiff } from "../../modules/ai";
 import inquirer from "inquirer";
 
@@ -140,10 +140,27 @@ export async function analyzeAndCommit() {
     }
 
     // Proceed with committing if confirmed
-    commitGroups.forEach(({ type, message }) => {
-        console.log(`\n📌 Committing: ${message}`);
+    for (const { type, message, hunks } of commitGroups) {
+        // Reset any staged changes first
+        runCommand('git reset');
+
+        // Stage only the files related to this commit
+        const filesToStage = new Set<string>();
+        hunks.forEach(hunk => {
+            const match = hunk.match(/^diff --git a\/(.*) b\/.*/m);
+            if (match && match[1]) {
+                filesToStage.add(match[1]);
+            }
+        });
+
+        // Stage and commit the files
+        console.log(`\n📌 Preparing commit: ${message}`);
+        filesToStage.forEach(file => {
+            runCommand(`git add "${file}"`);
+        });
+
         createCommit(type, message);
-    });
+    }
 
     console.log("\n✅ All commits created successfully!");
 }
