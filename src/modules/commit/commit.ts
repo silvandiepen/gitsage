@@ -181,8 +181,8 @@ export function createCommit(type: CommitType, message: string, hunks: string[] 
         stageFilesForCommit(hunks);
     }
 
-    const safeMessage = JSON.stringify(`${type}: ${message}`).replace(/"/g, '\\"');
-    runCommand(`git commit -m "${safeMessage}"`);
+    const commitMessage = `${type}: ${message}`;
+    runCommand(`git commit -m '${commitMessage}'`);
 }
 
 
