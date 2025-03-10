@@ -1,4 +1,5 @@
-import { runCommand, getFileStatusEmoji, getUnstagedFiles, getUntrackedFiles, getStagedFiles, stageFiles, createCommit } from './commit';
+import { runCommand, getFileStatusEmoji, getUnstagedFiles, getUntrackedFiles, getStagedFiles, stageFiles, createCommit, promptFileSelection } from './commit';
+import inquirer from 'inquirer';
 import { execSync } from 'child_process';
 
 jest.mock('child_process');
@@ -24,7 +25,7 @@ describe('Git Operations', () => {
       });
 
       const result = runCommand('invalid-command');
-      expect(result).toBe('');
+      expect(result).toBe('Command failed');
     });
   });
 
@@ -74,9 +75,11 @@ describe('Git Operations', () => {
 
   describe('getStagedFiles', () => {
     it('should return staged files and diff', () => {
+      const mockFiles = 'M file1.ts\nD file2.ts';
+      const mockDiff = 'diff content';
       (execSync as jest.Mock)
-        .mockReturnValueOnce('M file1.ts\nD file2.ts')
-        .mockReturnValueOnce('diff content');
+        .mockReturnValueOnce(mockFiles)
+        .mockReturnValueOnce(mockDiff);
 
       const result = getStagedFiles();
       expect(result).toEqual({
@@ -105,6 +108,31 @@ describe('Git Operations', () => {
         'git commit -m "feat: add new feature"',
         { encoding: 'utf-8' }
       );
+    });
+  });
+
+  describe('promptFileSelection', () => {
+    it('should prompt user to select files and return selected files', async () => {
+      const mockFiles = [
+        { name: 'file1.ts', value: 'file1.ts', status: 'M' },
+        { name: 'file2.ts', value: 'file2.ts', status: 'D' }
+      ];
+
+      jest.spyOn(inquirer, 'prompt').mockResolvedValueOnce({ filesToStage: ['file1.ts'] });
+
+      const result = await promptFileSelection(mockFiles);
+      expect(result).toEqual(['file1.ts']);
+      expect(inquirer.prompt).toHaveBeenCalledWith([
+        {
+          type: 'checkbox',
+          name: 'filesToStage',
+          message: 'Select files to stage:',
+          choices: [
+            { name: '📝 file1.ts', value: 'file1.ts' },
+            { name: '🗑️ file2.ts', value: 'file2.ts' }
+          ]
+        }
+      ]);
     });
   });
 });
