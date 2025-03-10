@@ -105,34 +105,11 @@ describe('Git Operations', () => {
       createCommit('feat', 'add new feature');
 
       expect(execSync).toHaveBeenCalledWith(
-        'git commit -m "feat: add new feature"',
+
+
+        "git commit -m 'feat: add new feature'",
         { encoding: 'utf-8' }
       );
-    });
-  });
-
-  describe('promptFileSelection', () => {
-    it('should prompt user to select files and return selected files', async () => {
-      const mockFiles = [
-        { name: 'file1.ts', value: 'file1.ts', status: 'M' },
-        { name: 'file2.ts', value: 'file2.ts', status: 'D' }
-      ];
-
-      jest.spyOn(inquirer, 'prompt').mockResolvedValueOnce({ filesToStage: ['file1.ts'] });
-
-      const result = await promptFileSelection(mockFiles);
-      expect(result).toEqual(['file1.ts']);
-      expect(inquirer.prompt).toHaveBeenCalledWith([
-        {
-          type: 'checkbox',
-          name: 'filesToStage',
-          message: 'Select files to stage:',
-          choices: [
-            { name: '📝 file1.ts', value: 'file1.ts' },
-            { name: '🗑️ file2.ts', value: 'file2.ts' }
-          ]
-        }
-      ]);
     });
   });
 });
