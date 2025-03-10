@@ -48,6 +48,10 @@ export async function getGitChanges(): Promise<{ diff: string; summary: string; 
         // Prompt user to select files to stage
         const filesToStage = await promptFileSelection(allChanges);
 
+        if (!filesToStage || filesToStage.length === 0) {
+            return { diff: "", summary: "No files were selected to stage.", hasDependencyChanges: false };
+        }
+
         // Stage selected files
         stageFiles(filesToStage);
 
@@ -100,7 +104,7 @@ export async function getGitChanges(): Promise<{ diff: string; summary: string; 
  */
 export async function analyzeAndCommit(): Promise<void> {
     console.log("🧠 Analyzing Git changes...");
-    const { diff, summary, hasDependencyChanges } = await getGitChanges();
+    let { diff, summary, hasDependencyChanges } = await getGitChanges();
 
     // Handle dependency changes first if present
     if (hasDependencyChanges) {
@@ -112,7 +116,10 @@ export async function analyzeAndCommit(): Promise<void> {
         // Create dependency commit
         createCommit("chore", "update dependencies");
         // Get remaining changes
-        const remainingChanges = await getGitChanges();
+        const { diff: remainingDiff, summary: remainingSummary } = await getGitChanges();
+        diff = remainingDiff;
+        summary = remainingSummary;
+    }
 
     if (!diff) {
         console.log("No changes detected.");
@@ -217,4 +224,4 @@ export async function analyzeAndCommit(): Promise<void> {
 
     console.log("\n✅ All commits created successfully!");
     }
-}
+
