@@ -1,5 +1,5 @@
 import { execSync } from 'child_process';
-import { hasChanges, getCurrentChanges, getCommitDetails, performFixup, getRepoStatus } from '../fixup';
+import { hasChanges, getCurrentChanges, getCommitDetails, performFixup, getRepoStatus } from './fixup';
 
 jest.mock('child_process');
 

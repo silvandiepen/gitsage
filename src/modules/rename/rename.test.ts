@@ -1,4 +1,4 @@
-import { getCommitMessage, getHeadCommit, renameCommit } from '../rename';
+import { getCommitMessage, getHeadCommit, renameCommit } from './rename';
 import { execSync } from 'child_process';
 import inquirer, { Answers } from 'inquirer';
 import * as log from 'cli-block';

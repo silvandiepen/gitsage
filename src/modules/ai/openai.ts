@@ -1,7 +1,7 @@
 import OpenAI from "openai";
-import { getApiKey } from "../../config";
+import { getApiKey } from "../config/config";
 import * as log from "cli-block";
-import { CommitType } from "../git/types";
+import { CommitType } from "../../types/types";
 
 /**
  * Initializes and returns an OpenAI API instance with the configured API key
@@ -46,7 +46,7 @@ export function splitDiffIntoChunks(diff: string, maxChunkSize: number): string[
  */
 export async function processGitDiff(diff: string): Promise<Array<{ type: CommitType; message: string; hunks: string[] }>> {
     const openai = await getOpenAIInstance();
-    const MAX_CHUNK_LENGTH = 4000;
+    const MAX_CHUNK_LENGTH = 10000;
     const diffChunks = splitDiffIntoChunks(diff, MAX_CHUNK_LENGTH);
 
     log.start("Git Commit Analysis");
@@ -57,19 +57,57 @@ export async function processGitDiff(diff: string): Promise<Array<{ type: Commit
         role: "system",
         content: `
             You are an expert in Git and software development.
-            I will send you the complete Git diff in multiple messages.
-            Do NOT respond yet—just acknowledge receipt.
-            Once I send 'END_OF_DIFF', analyze all received changes together
-            and generate meaningful commit messages, grouping related changes together.
+            Your task is to analyze a Git diff and generate structured commit messages along with corresponding Git patch hunks.
 
-            IMPORTANT: Your response MUST be a valid JSON array containing objects with the following structure:
-            [{
-                "type": "feat|fix|chore|docs|style|refactor|perf|test",
-                "message": "descriptive commit message",
-                "hunks": ["patch content"]
-            }]
-            `
-    }];
+            **For each commit, return:**
+            - A commit **type** (feat, fix, chore, docs, style, refactor, perf, test).
+            - A **concise, meaningful commit message**.
+            - A list of **valid Git patch hunks** (formatted as proper \`git diff --git\` patches).
+
+            ---
+            ### **⚠️ IMPORTANT REQUIREMENTS**
+            1️⃣ **Each hunk MUST be a complete, valid Git patch** that can be directly applied using:
+            \`\`\`sh
+            git apply --cached
+            \`\`\`
+            2️⃣ **Each hunk MUST start with**:
+            \`\`\`diff
+            diff --git a/{filepath} b/{filepath}
+            \`\`\`
+            3️⃣ **Each hunk MUST include:**
+               - The correct file path.
+               - A valid \`index\` hash.
+               - A properly formatted hunk header (\`@@ -X,Y +A,B @@\`).
+               - The **full code change** in Git diff format.
+            4️⃣ **DO NOT return plain code snippets**—only **fully valid Git patches**.
+            5️⃣ **DO NOT escape newlines (\\n) inside hunks.** Return hunks as **normal multi-line JSON strings**.
+            6️⃣ **DO NOT add extra formatting, JSON should be valid as-is.**
+
+            ---
+            ### ✅ **Example Valid JSON Response**
+            \`\`\`json
+            [
+                {
+                    "type": "refactor",
+                    "message": "Refactored authentication module to improve maintainability",
+                    "hunks": [
+                        "diff --git a/src/auth.ts b/src/auth.ts\nindex abc123..def456 100644\n--- a/src/auth.ts\n+++ b/src/auth.ts\n@@ -10,7 +10,7 @@ export function authenticateUser() {\n- console.log('Authenticating user...');\n+ console.info('User authentication in progress');"
+                    ]
+                },
+                {
+                    "type": "fix",
+                    "message": "Fixed incorrect import path in index.ts",
+                    "hunks": [
+                        "diff --git a/src/index.ts b/src/index.ts\nindex 789abc..123def 100644\n--- a/src/index.ts\n+++ b/src/index.ts\n@@ -2,1 +2,1 @@\n-import oldModule from './oldLocation';\n+import newModule from './newLocation';"
+                    ]
+                }
+            ]
+            \`\`\`
+
+            ---
+            **Return only a valid JSON array formatted like the example above.** Do not include extra explanations, markdown, or escaped characters.`
+         }];
+
 
     log.blockMid("Sending Changes to AI");
     for (const chunk of diffChunks) {
@@ -86,7 +124,7 @@ export async function processGitDiff(diff: string): Promise<Array<{ type: Commit
         log.blockMid("Analyzing Changes");
         log.blockLine("Waiting for AI analysis...");
         const response = await openai.chat.completions.create({
-            model: "gpt-4",
+            model: "gpt-4o-mini",
             messages: messages.map(msg => ({
                 role: msg.role as "system" | "user" | "assistant",
                 content: msg.content
@@ -101,61 +139,33 @@ export async function processGitDiff(diff: string): Promise<Array<{ type: Commit
             return [];
         }
 
-        let commitGroups;
+
+
         try {
-            commitGroups = JSON.parse(aiResponse);
-        } catch (parseError: unknown) {
-            if (parseError instanceof Error) {
-                log.blockLine("⚠️ Failed to parse AI response as JSON: " + parseError.message);
-            } else {
-                log.blockLine("⚠️ Failed to parse AI response as JSON");
+            const parsedResponse = JSON.parse(aiResponse);
+            if (!Array.isArray(parsedResponse)) {
+                log.blockLine("⚠️ Response is not an array");
+                return [];
             }
+            return parsedResponse;
+        } catch (parseError) {
+            const errorMessage = parseError instanceof Error ? parseError.message : 'Invalid JSON response';
+            log.blockLine("⚠️ Failed to parse OpenAI response: " + errorMessage);
+
+            // Log the raw response before parsing
+            log.blockMid("Raw AI Response");
+            log.blockJson(aiResponse);
+
             return [];
         }
-
-        if (!Array.isArray(commitGroups)) {
-            log.blockLine("⚠️ Invalid response format: expected an array");
-            return [];
-        }
-
-        // Validate each commit group
-        const validCommitGroups = commitGroups.filter(group => {
-            if (!group || typeof group !== 'object') {
-                log.blockLine("⚠️ Invalid commit group format: expected an object");
-                return false;
-            }
-
-            const validTypes = ['feat', 'fix', 'chore', 'docs', 'style', 'refactor', 'perf', 'test'];
-            if (!group.type || !validTypes.includes(group.type)) {
-                log.blockLine(`⚠️ Invalid commit type: ${group.type}`);
-                return false;
-            }
-
-            if (!group.message || typeof group.message !== 'string') {
-                log.blockLine("⚠️ Invalid commit message format");
-                return false;
-            }
-
-            if (!Array.isArray(group.hunks)) {
-                log.blockLine("⚠️ Invalid hunks format: expected an array");
-                return false;
-            }
-
-            return true;
-        });
-
-        if (validCommitGroups.length > 0) {
-            log.blockMid("Generated Commit Messages");
-            validCommitGroups.forEach(group => {
-                log.blockRowLine([group.type, group.message]);
-            });
-        }
-
-        log.blockFooter();
-        return validCommitGroups;
     } catch (error) {
-        log.blockLine("⚠️ OpenAI API error: " + error);
-        log.blockFooter();
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        log.blockLine(`⚠️ OpenAI API call failed: ${errorMessage}`);
+        if (error instanceof OpenAI.APIError) {
+            log.blockLine(`Status: ${error.status}`);
+            log.blockLine(`Type: ${error.type}`);
+            if (error.code) log.blockLine(`Code: ${error.code}`);
+        }
         return [];
     }
 }

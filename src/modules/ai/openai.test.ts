@@ -1,13 +1,24 @@
-import { splitDiffIntoChunks, getOpenAIInstance, processGitDiff } from '../openai';
+import { splitDiffIntoChunks, getOpenAIInstance, processGitDiff } from './openai';
 import OpenAI from 'openai';
-import { getApiKey } from '../../../config';
+import { getApiKey } from '../config/config';
 
-jest.mock('../../../config');
+jest.mock('../config/config');
 jest.mock('openai');
 
 describe('AI Operations', () => {
+    let mockOpenAI: { chat: { completions: { create: jest.Mock } } };
+
     beforeEach(() => {
         jest.clearAllMocks();
+        mockOpenAI = {
+            chat: {
+                completions: {
+                    create: jest.fn()
+                }
+            }
+        };
+        (OpenAI as unknown as jest.Mock).mockImplementation(() => mockOpenAI);
+        (getApiKey as jest.Mock).mockResolvedValue('test-api-key');
     });
 
     describe('splitDiffIntoChunks', () => {
@@ -39,35 +50,21 @@ describe('AI Operations', () => {
     describe('getOpenAIInstance', () => {
         it('should create OpenAI instance with API key', async () => {
             const mockApiKey = 'test-api-key';
-            (getApiKey as jest.Mock).mockResolvedValue(mockApiKey);
+            (getApiKey as jest.Mock).mockResolvedValueOnce(mockApiKey);
 
             await getOpenAIInstance();
-
             expect(OpenAI).toHaveBeenCalledWith({ apiKey: mockApiKey });
         });
 
         it('should throw error if API key retrieval fails', async () => {
             const error = new Error('API key error');
-            (getApiKey as jest.Mock).mockRejectedValue(error);
+            (getApiKey as jest.Mock).mockRejectedValueOnce(error);
 
-            await expect(getOpenAIInstance()).rejects.toThrow('API key error');
+            await expect(getOpenAIInstance()).rejects.toThrow(error);
         });
     });
 
     describe('processGitDiff', () => {
-        const mockOpenAI = {
-            chat: {
-                completions: {
-                    create: jest.fn()
-                }
-            }
-        };
-
-        beforeEach(() => {
-            (OpenAI as unknown as jest.Mock).mockImplementation(() => mockOpenAI);
-            (getApiKey as jest.Mock).mockResolvedValue('test-api-key');
-        });
-
         it('should process git diff and return commit groups', async () => {
             const mockResponse = {
                 choices: [{
@@ -83,7 +80,7 @@ describe('AI Operations', () => {
                 }]
             };
 
-            mockOpenAI.chat.completions.create.mockResolvedValue(mockResponse);
+            mockOpenAI.chat.completions.create.mockResolvedValueOnce(mockResponse);
 
             const result = await processGitDiff('test diff');
 
@@ -100,7 +97,7 @@ describe('AI Operations', () => {
                 choices: [{ message: { content: null } }]
             };
 
-            mockOpenAI.chat.completions.create.mockResolvedValue(mockResponse);
+            mockOpenAI.chat.completions.create.mockResolvedValueOnce(mockResponse);
 
             const result = await processGitDiff('test diff');
 
@@ -112,7 +109,7 @@ describe('AI Operations', () => {
                 choices: [{ message: { content: 'invalid json' } }]
             };
 
-            mockOpenAI.chat.completions.create.mockResolvedValue(mockResponse);
+            mockOpenAI.chat.completions.create.mockResolvedValueOnce(mockResponse);
 
             const result = await processGitDiff('test diff');
 
@@ -120,7 +117,7 @@ describe('AI Operations', () => {
         });
 
         it('should handle API errors', async () => {
-            mockOpenAI.chat.completions.create.mockRejectedValue(new Error('API error'));
+            mockOpenAI.chat.completions.create.mockRejectedValueOnce(new Error('API error'));
 
             const result = await processGitDiff('test diff');
 

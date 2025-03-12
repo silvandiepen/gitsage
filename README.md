@@ -15,6 +15,9 @@ An intelligent Git commit message generator powered by OpenAI's GPT-4. This tool
 - ✨ Interactive commit message selection
 - 🛠️ Easy configuration and setup
 - 🔄 Interactive fixup for commit amendments
+- 📋 AI-powered PR content generation
+- 🌿 Smart branch management
+- 🔄 Automated push handling
 
 ## Quick Start
 
@@ -41,12 +44,55 @@ Before using gitsage, you'll need to configure your OpenAI API key. The tool wil
 
 ## Usage
 
+### Commit Management
+
 1. (Optional) Stage your changes using git add:
 ```bash
 git add <files>
 ```
 
 2. Run gitsage:
+```bash
+gitsage commit
+```
+
+### Branch Management
+
+Create a new branch or switch to an existing one:
+```bash
+gitsage branch <branch-title> [-t <type>]
+```
+Example:
+```bash
+gitsage branch new-feature -t feature
+```
+
+Push your current branch to remote:
+```bash
+gitsage push
+```
+This command handles:
+- Setting up upstream tracking
+- Handling force push scenarios
+- Interactive confirmation for potentially destructive operations
+
+### Other Commands
+
+Rename a commit:
+```bash
+gitsage rename [commit-hash]
+```
+
+Add changes to a previous commit:
+```bash
+gitsage fixup
+```
+
+Generate PR content:
+```bash
+gitsage pr
+```
+
 ```bash
 gitsage
 ```
@@ -55,9 +101,61 @@ gitsage
 
 Note: If no changes are staged, gitsage will automatically help you select which files to stage through an interactive interface. This makes the staging process optional and more user-friendly.
 
+### Using Branch Management
+
+To create or switch to a branch with proper type prefix:
+
+```bash
+gitsage checkout <branch-name>
+```
+
+If no type is provided in the branch name (e.g., feature/my-branch), you'll be prompted to select one from:
+- feature
+- fix
+- chore
+- docs
+- style
+- refactor
+- perf
+- test
+
+To push your current branch:
+
+```bash
+gitsage push
+```
+
+This will:
+1. Push your changes to remote
+2. Handle upstream branch creation if needed
+3. Prompt for force push if remote has diverged
+
+### Using Pull Request Generation
+
+To generate a pull request with AI-powered content:
+
+```bash
+gitsage pr
+```
+
+This will:
+1. Detect your Git platform (GitHub/Bitbucket)
+2. Analyze the changes between your current branch and target branch
+3. Generate a well-structured PR description including:
+   - Title and description
+   - Problem statement
+   - Solution overview
+   - List of changes
+   - Testing details
+4. Create the PR using the platform's CLI tool (gh/bb)
+
+Requirements:
+- GitHub CLI (gh) for GitHub repositories
+- Bitbucket CLI (bb) for Bitbucket repositories
+
 ### Using Fixup
 
-The fixup command allows you to amend changes to a previous commit:
+The fixup command helps you amend changes to a previous commit:
 
 ```bash
 gitsage fixup
@@ -65,13 +163,48 @@ gitsage fixup
 
 This will:
 1. Show your current changes
-2. Let you select a commit to fixup into
-3. Create a fixup commit and automatically rebase
+2. Display a list of recent commits
+3. Let you select a commit to fixup into
+4. Create a fixup commit and automatically rebase
 
 It's useful when you want to:
 - Add forgotten changes to a previous commit
 - Fix bugs in earlier commits
 - Keep your commit history clean and organized
+
+### Using Commit
+
+To generate an AI-powered commit message for your changes:
+
+```bash
+gitsage commit
+```
+
+This will:
+1. Analyze your staged changes (or help you stage them)
+2. Generate meaningful commit messages based on the changes
+3. Group related changes together
+4. Let you select or modify the generated message
+5. Create a conventional commit with the selected message
+
+### Using Rename
+
+To rename files with AI assistance:
+
+```bash
+gitsage rename
+```
+
+This will:
+1. Analyze your selected files
+2. Suggest meaningful names based on file content and context
+3. Let you review and confirm the suggested names
+4. Handle the file renaming and related git operations
+
+Useful for:
+- Organizing project files
+- Making file names more descriptive
+- Maintaining consistent naming conventions
 
 ## How It Works
 

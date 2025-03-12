@@ -1,8 +1,8 @@
 import { execSync } from "child_process";
 import inquirer from "inquirer";
 import * as log from "cli-block";
-import { stripAnsiCodes } from "./utils";
-import { COMMIT_TYPES } from "./types";
+import { stripAnsiCodes } from "../../utils";
+import { COMMIT_TYPES } from "../../types";
 import * as fs from "fs";
 
 /**

@@ -1,9 +1,13 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
-import { analyzeAndCommit } from "./controllers/gitsage";
-import { renameCommit } from "./modules/git/rename";
-import { fixup } from "./modules/git/fixup";
+import { analyzeAndCommit } from "./modules/commit";
+import { renameCommit } from "./modules/rename";
+import { fixup } from "./modules/fixup";
+import { generatePR } from "./modules/pr";
+import { pushBranch } from "./modules/branch";
+import { branchCommand } from "./controllers/branch";
+import { configureSettings } from "./modules/config/config";
 
 const program = new Command();
 
@@ -32,6 +36,34 @@ program
   .description("Add changes to a previous commit")
   .action(() => {
     fixup();
+  });
+
+program
+  .command("pr")
+  .description("Generate pull request content using AI analysis")
+  .action(() => {
+    generatePR();
+  });
+
+program
+  .command("config")
+  .description("Configure GitSage settings")
+  .action(() => {
+    configureSettings();
+  });
+
+program
+  .command("branch")
+  .description("Interactive branch management")
+  .action(() => {
+    branchCommand();
+  });
+
+program
+  .command("push")
+  .description("Push current branch to remote with upstream and force push handling")
+  .action(() => {
+    pushBranch();
   });
 
 program.parse(process.argv);
