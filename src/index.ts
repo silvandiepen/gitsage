@@ -7,6 +7,7 @@ import { fixup } from "./modules/fixup";
 import { generatePR } from "./modules/pr";
 import { pushBranch } from "./modules/branch";
 import { branchCommand } from "./controllers/branch";
+import { configureSettings } from "./modules/config/config";
 
 const program = new Command();
 
@@ -42,6 +43,13 @@ program
   .description("Generate pull request content using AI analysis")
   .action(() => {
     generatePR();
+  });
+
+program
+  .command("config")
+  .description("Configure GitSage settings")
+  .action(() => {
+    configureSettings();
   });
 
 program
