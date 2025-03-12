@@ -57,38 +57,57 @@ export async function processGitDiff(diff: string): Promise<Array<{ type: Commit
         role: "system",
         content: `
             You are an expert in Git and software development.
-            Analyze the Git diff to generate concise, meaningful, and specific commit messages.
-            Focus on creating a clear narrative that explains:
+            Your task is to analyze a Git diff and generate structured commit messages along with corresponding Git patch hunks.
 
-            1. The specific technical changes made (e.g., "Implemented JWT authentication", not "Updated authentication")
-            2. The concrete business value or technical improvement (e.g., "Reduced API response time by 40%")
-            3. The scope of impact (e.g., "Refactored user authentication flow across all API endpoints")
+            **For each commit, return:**
+            - A commit **type** (feat, fix, chore, docs, style, refactor, perf, test).
+            - A **concise, meaningful commit message**.
+            - A list of **valid Git patch hunks** (formatted as proper \`git diff --git\` patches).
 
-            Guidelines for generating commit messages:
-            - Be specific and quantitative where possible (e.g., "Reduced bundle size by 25%" vs "Optimized bundle size")
-            - Focus on the technical substance, not just the category of change
-            - Avoid generic terms like "multiple updates", "various changes", or "improvements"
-            - Include specific numbers, percentages, or metrics when relevant
-            - Mention specific technologies, patterns, or standards being implemented
+            ---
+            ### **⚠️ IMPORTANT REQUIREMENTS**
+            1️⃣ **Each hunk MUST be a complete, valid Git patch** that can be directly applied using:
+            \`\`\`sh
+            git apply --cached
+            \`\`\`
+            2️⃣ **Each hunk MUST start with**:
+            \`\`\`diff
+            diff --git a/{filepath} b/{filepath}
+            \`\`\`
+            3️⃣ **Each hunk MUST include:**
+               - The correct file path.
+               - A valid \`index\` hash.
+               - A properly formatted hunk header (\`@@ -X,Y +A,B @@\`).
+               - The **full code change** in Git diff format.
+            4️⃣ **DO NOT return plain code snippets**—only **fully valid Git patches**.
+            5️⃣ **DO NOT escape newlines (\\n) inside hunks.** Return hunks as **normal multi-line JSON strings**.
+            6️⃣ **DO NOT add extra formatting, JSON should be valid as-is.**
 
-            For features:
-            - Name the specific feature or capability being added
-            - Mention the key technical components or patterns used
-            - Include any performance or scalability characteristics
+            ---
+            ### ✅ **Example Valid JSON Response**
+            \`\`\`json
+            [
+                {
+                    "type": "refactor",
+                    "message": "Refactored authentication module to improve maintainability",
+                    "hunks": [
+                        "diff --git a/src/auth.ts b/src/auth.ts\nindex abc123..def456 100644\n--- a/src/auth.ts\n+++ b/src/auth.ts\n@@ -10,7 +10,7 @@ export function authenticateUser() {\n- console.log('Authenticating user...');\n+ console.info('User authentication in progress');"
+                    ]
+                },
+                {
+                    "type": "fix",
+                    "message": "Fixed incorrect import path in index.ts",
+                    "hunks": [
+                        "diff --git a/src/index.ts b/src/index.ts\nindex 789abc..123def 100644\n--- a/src/index.ts\n+++ b/src/index.ts\n@@ -2,1 +2,1 @@\n-import oldModule from './oldLocation';\n+import newModule from './newLocation';"
+                    ]
+                }
+            ]
+            \`\`\`
 
-            For fixes:
-            - Name the specific bug or issue being fixed
-            - Mention the root cause if relevant
-            - Include any performance impact of the fix
+            ---
+            **Return only a valid JSON array formatted like the example above.** Do not include extra explanations, markdown, or escaped characters.`
+         }];
 
-            Your response MUST be a valid JSON array containing objects with the following structure:
-            [{
-                "type": "feat|fix|chore|docs|style|refactor|perf|test",
-                "message": "descriptive commit message explaining the specific changes",
-                "hunks": ["patch content"]
-            }]
-            `
-    }];
 
     log.blockMid("Sending Changes to AI");
     for (const chunk of diffChunks) {
@@ -105,7 +124,7 @@ export async function processGitDiff(diff: string): Promise<Array<{ type: Commit
         log.blockMid("Analyzing Changes");
         log.blockLine("Waiting for AI analysis...");
         const response = await openai.chat.completions.create({
-            model: "gpt-4",
+            model: "gpt-4o-mini",
             messages: messages.map(msg => ({
                 role: msg.role as "system" | "user" | "assistant",
                 content: msg.content

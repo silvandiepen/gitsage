@@ -3,6 +3,7 @@ import inquirer from "inquirer";
 import * as log from "cli-block";
 import { COMMIT_TYPES } from '../../types/types';
 import { parseBranchName } from './branch';
+import { kebabCase } from "@sil/case";
 
 /**
  * Creates a new branch with proper type prefix
@@ -26,7 +27,7 @@ export async function createBranch(branchTitle: string, type?: string): Promise<
             branchType = selectedType;
         }
 
-        const branchName = `${branchType}/${branchTitle}`;
+        const branchName = `${branchType}/${kebabCase(branchTitle)}`;
 
         try {
             // Check if branch exists locally

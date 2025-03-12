@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
-import { analyzeAndCommit } from "./controllers/gitsage";
+import { analyzeAndCommit } from "./modules/commit";
 import { renameCommit } from "./modules/rename";
 import { fixup } from "./modules/fixup";
 import { generatePR } from "./modules/pr";

@@ -8,8 +8,9 @@
   },
   "scripts": {
     "build": "tsc",
+    "dev": "tsc -w",
     "prepare": "npm run build",
-    "start": "node dist/index.js",
+    "gitsage": "node dist/index.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "semantic-release": "semantic-release"
@@ -18,6 +19,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@sil/case": "^0.3.1",
     "cli-block": "^1.4.4",
     "commander": "^13.1.0",
     "dotenv": "^16.4.7",
