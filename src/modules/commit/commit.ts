@@ -76,7 +76,18 @@ export function getUntrackedFiles(): { name: string; value: string; status: stri
  */
 export function getStagedFiles(): { files: string[]; diff: string } {
     const files = runCommand("git diff --staged --name-status").split("\n").filter(Boolean);
-    const diff = runCommand("git diff --staged --unified=0");
+    const diff = runCommand("git diff --staged --unified=0")
+        // Remove all control characters (including null bytes)
+        .replace(/[\x00-\x09\x0B-\x0C\x0E-\x1F\x7F]/g, '')
+        // Normalize all types of line endings to \n
+        .replace(/\r\n|\r/g, '\n')
+        // Ensure the string is valid UTF-8
+        .replace(/[^\x20-\x7E\n]/g, '')
+        // Escape backslashes and quotes
+        .replace(/\\/g, '\\\\')
+        .replace(/"/g, '\\"')
+        // Remove any remaining invalid JSON characters
+        .replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
     return { files, diff };
 }
 
