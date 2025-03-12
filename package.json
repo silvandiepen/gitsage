@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "AI-powered Git commit automation tool",
   "main": "dist/index.js",
+  "files": ["dist"],
   "bin": {
     "gitsage": "dist/index.js"
   },
