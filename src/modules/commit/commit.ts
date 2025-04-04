@@ -5,6 +5,8 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import { writeFileSync, unlinkSync, existsSync } from 'fs';
 
+import * as log from "cli-block";
+
 /**
  * Executes a shell command and returns its output
  * @param {string} cmd - The shell command to execute
@@ -14,7 +16,7 @@ export function runCommand(cmd: string): string {
     try {
         return execSync(cmd, { encoding: "utf-8" }).trim();
     } catch (error: any) {
-        console.error(`Command failed: ${cmd}\nError: ${error.message}`);
+        log.error(`Command failed: ${cmd}\nError: ${error.message}`);
         return error.message; // Return error message instead of an empty string
     }
 }
@@ -118,10 +120,10 @@ export function validatePatch(patchContent: string): boolean {
     try {
         writeFileSync(tempPatchFile, patchContent, 'utf8');
         execSync(`git apply --check ${tempPatchFile}`, { stdio: 'pipe' });
-        console.log(tempPatchFile)
+        log.info(`Validating patch: ${tempPatchFile}`);
         return true;
     } catch (error: any) {
-        console.error('\n⚠️ Patch validation failed!');
+        log.error('⚠️ Patch validation failed!');
 
         // Extract line number from error message
         const lineMatch = error.message.match(/error: corrupt patch at line (\d+)/);
@@ -132,16 +134,16 @@ export function validatePatch(patchContent: string): boolean {
             const contextStart = Math.max(0, errorLine - 3);
             const contextEnd = Math.min(patchLines.length, errorLine + 2);
 
-            console.error('\nProblem detected around line', errorLine);
-            console.error('Context:');
+            log.error('Problem detected around line ' + errorLine);
+            log.error('Context:');
 
             for (let i = contextStart; i < contextEnd; i++) {
                 const prefix = i + 1 === errorLine ? '>>> ' : '    ';
-                console.error(`${prefix}${(i + 1).toString().padStart(3, ' ')}: ${patchLines[i]}`);
+                log.error(`${prefix}${(i + 1).toString().padStart(3, ' ')}: ${patchLines[i]}`);
             }
         }
 
-        console.error('\nError details:', error.message);
+        log.error('Error details: ' + error.message);
         return false;
     } finally {
         if (existsSync(tempPatchFile)) {
@@ -156,13 +158,13 @@ export function validatePatch(patchContent: string): boolean {
  */
 export function stageFilesForCommit(hunks: string[]): void {
     if (hunks.length === 0) {
-        console.warn("No hunks to stage.");
+        log.warn("No hunks to stage.");
         return;
     }
 
     const patchContent = hunks.join('\n');
     if (!validatePatch(patchContent)) {
-        console.error('Invalid patch content. Aborting staging process.');
+        log.error('Invalid patch content. Aborting staging process.');
         return;
     }
 
@@ -172,7 +174,7 @@ export function stageFilesForCommit(hunks: string[]): void {
         writeFileSync(tempPatchFile, patchContent, 'utf8');
         execSync(`git apply --cached ${tempPatchFile}`, { stdio: 'inherit' });
     } catch (error) {
-        console.error('Failed to apply patch:', error);
+        log.error(`Failed to apply patch: ${error}`);
     } finally {
         if (existsSync(tempPatchFile)) {
             unlinkSync(tempPatchFile);
