@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import inquirer from "inquirer";
 import { execSync } from "child_process";
+import * as log from "cli-block";
 
 const CONFIG_DIR = path.join(process.env.HOME || process.env.USERPROFILE || ".", ".gitsage");
 const CONFIG_FILE = path.join(CONFIG_DIR, "config.json");
@@ -69,11 +70,12 @@ export async function configureSettings(): Promise<void> {
     ]);
 
     if (action === "view") {
-        console.log("\nCurrent Settings:");
-        console.log("AI Provider:", currentConfig.aiProvider);
-        console.log("OpenAI API Key:", currentConfig.apiKey ? "*****" : "Not set");
-        console.log("Git Name:", currentConfig.gitName || gitConfig.name || "Not set");
-        console.log("Git Email:", currentConfig.gitEmail || gitConfig.email || "Not set");
+        log.start("Current Settings");
+        log.blockLine(`AI Provider: ${currentConfig.aiProvider}`);
+        log.blockLine(`OpenAI API Key: ${currentConfig.apiKey ? "*****" : "Not set"}`);
+        log.blockLine(`Git Name: ${currentConfig.gitName || gitConfig.name || "Not set"}`);
+        log.blockLine(`Git Email: ${currentConfig.gitEmail || gitConfig.email || "Not set"}`);
+        log.blockFooter();
         return;
     }
 
@@ -149,7 +151,8 @@ export async function configureSettings(): Promise<void> {
     }
 
     await saveConfig({ [field]: value });
-    console.log("\nSettings updated successfully!");
+    log.blockLineSuccess("\nSettings updated successfully!");
+    log.blockFooter();
 }
 
 function getGitConfig() {
