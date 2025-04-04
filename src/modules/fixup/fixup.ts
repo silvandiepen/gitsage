@@ -8,7 +8,7 @@ import * as log from "cli-block";
  *
  * @example
  * if (hasChanges()) {
- *   console.log('You have uncommitted changes');
+ *   log.blockLine('You have uncommitted changes');
  * }
  *
  * @returns {boolean} True if there are any changes (staged or unstaged), false if working directory is clean
@@ -29,7 +29,7 @@ export function hasChanges(): boolean {
  *
  * @example
  * const changes = getCurrentChanges();
- * console.log('Current modifications:', changes);
+ * log.blockLine('Current modifications:', changes);
  *
  * @returns {string} Formatted git diff stat output showing modified files and line changes
  * @throws {Error} If unable to get git diff information
@@ -47,7 +47,7 @@ export function getCurrentChanges(): string {
  *
  * @example
  * const details = getCommitDetails('abc123');
- * console.log(`Commit by ${details.author} on ${details.date}`);
+ * log.blockLine(`Commit by ${details.author} on ${details.date}`);
  *
  * @param {string} commitHash - The full or shortened hash of the target commit
  * @returns {Object} Commit information
@@ -77,9 +77,9 @@ export function getCommitDetails(commitHash: string): { hash: string; message: s
  *
  * @example
  * if (performFixup('abc123')) {
- *   console.log('Fixup successful');
+ *   log.blockLine('Fixup successful');
  * } else {
- *   console.log('Fixup failed, manual intervention may be needed');
+ *   log.blockLineError('Fixup failed, manual intervention may be needed');
  * }
  *
  * @param {string} commitHash - Hash of the commit to fix up into
@@ -108,7 +108,7 @@ export function performFixup(commitHash: string): boolean {
  *
  * @example
  * const status = getRepoStatus();
- * console.log('Current repo status:', status);
+ * log.blockLine('Current repo status:', status);
  * // Output example:
  * // M  modified.ts   (staged)
  * // ?? newfile.ts   (untracked)
